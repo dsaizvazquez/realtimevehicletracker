@@ -1,10 +1,17 @@
 file(GLOB SOURCES_FILE 
     "detection/*.cpp" 
     "detection/*.h"
+    "tracking/*.cpp" 
+    "tracking/*.h"
+    "tracking/hungarian/*.cpp" 
+    "tracking/hungarian/*.h"
 ) 
 
 include_directories("utils")
 include_directories("detection")
+include_directories("tracking")
+include_directories("tracking/hungarian")
+
 
 
 

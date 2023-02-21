@@ -13,7 +13,7 @@ typedef struct Detection
 	float confidence;
 	cv::Rect box;
   int class_id;
-}Object;
+}Detection;
 
 
 class Detector {

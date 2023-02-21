@@ -4,6 +4,7 @@
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
 #include <spdlog/spdlog.h>
 #include "detection/Detector.h"
+#include "tracking/TrackerHandler.h"
 #include "drawing.h"
 
 
@@ -71,7 +72,12 @@ int main(int argc, char * argv[]){
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
 	net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 
+    // Create detector
     Detector detector(net,class_list);
+
+    //Create tracker
+    TrackerHandler tracker(0.3,4); //TODO parametrize 
+    std::vector<Target> targets;
 
     // Load video.
     cv::VideoCapture cap(inputFile);
@@ -81,7 +87,7 @@ int main(int argc, char * argv[]){
     cv::VideoWriter video;
     if(isVideo){
         spdlog::info("is a video");
-        video.open(outputFile, cv::VideoWriter::fourcc('M','J','P','G'), 30, cv::Size(frame_width,frame_height));
+        video.open(outputFile, cv::VideoWriter::fourcc('M','J','P','G'), 31, cv::Size(frame_width,frame_height));
     }else{
         video.open(outputFile,cv::CAP_GSTREAMER, 0, 16, cv::Size (frame_width, frame_height), true);
     }
@@ -92,16 +98,30 @@ int main(int argc, char * argv[]){
 
         //Step 1: detect the bounding boxes
         std::vector<Detection>detections = detector.detect(frame);
+        spdlog::debug("boxes detected");
 
-        //TODO Step 2: tracking
 
+        //Step 2: tracking
+        
+        tracker.init(detections);
+        spdlog::debug("initialized");
 
-        //TODO Step 3: Correlation
+        tracker.predict();
+        spdlog::debug("predicted");
 
+        tracker.match();
+        spdlog::debug("matched");
+
+        targets = tracker.correct();
+        spdlog::debug("corrected");
+
+        
+
+        //Step 3: Project Speed
 
         //Step 4: Drawing
-        for(int i=0;i<detections.size();i++){
-            cv::Rect box = detections[i].box;
+        for(int i=0;i<targets.size();i++){
+            cv::Rect box = targets[i].box;
             int left = box.x;
             int top = box.y;
             int width = box.width;
@@ -109,8 +129,8 @@ int main(int argc, char * argv[]){
             // Draw bounding box.
             cv::rectangle(frame, cv::Point(left, top), cv::Point(left + width, top + height), BLUE, 3*THICKNESS);
             // Get the label for the class name and its confidence.
-            std::string label = cv::format("%.2f", detections[i].confidence);
-            label = class_list[detections[i].class_id] + ":" + label;
+            std::string label = cv::format("%d,%.2f,%.2d,%.2d",targets[i].id, targets[i].confidence, targets[i].speed.x,targets[i].speed.y);
+            label = class_list[targets[i].class_id] + ":" + label;
             // Draw class labels.
             draw::draw_label(frame, label, left, top);
         }
