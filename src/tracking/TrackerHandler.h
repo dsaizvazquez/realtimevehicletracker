@@ -14,8 +14,8 @@ typedef struct Target
 class TrackerHandler{
 
     double iouThreshold = 0.3;
-    int max_age = 3;
-    int id_counter=0;
+    int maxAge = 3;
+    int idCounter=0;
     
     std::vector<KalmanTracker> trackers;
     std::vector<cv::Rect> predictedBoxes;
@@ -33,7 +33,7 @@ class TrackerHandler{
     double GetIOU(cv::Rect bb_test, cv::Rect bb_gt);
 
     public:
-        TrackerHandler(double iouT, int age):iouThreshold(iouT),max_age(age){};
+        TrackerHandler(double iouT, int age):iouThreshold(iouT),maxAge(age){};
         void init(std::vector<Detection> detections);
         void predict();
         void match();

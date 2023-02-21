@@ -14,3 +14,4 @@ include_directories(${CMAKE_SOURCE_DIR}/libs)
 
 add_subdirectory(src)
 add_subdirectory(examples)
+add_subdirectory(external/yaml-cpp)

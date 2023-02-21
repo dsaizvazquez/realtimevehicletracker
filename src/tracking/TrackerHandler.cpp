@@ -8,8 +8,8 @@ void TrackerHandler::init(std::vector<Detection> newDetections){
                 for (unsigned int i = 0; i < detections.size(); i++)
                 {
                     KalmanTracker trk;
-                    trk.init(detections[i].box,id_counter);
-					id_counter++;
+                    trk.init(detections[i].box,idCounter);
+					idCounter++;
                     trackers.push_back(trk);
                 }
     }
@@ -20,7 +20,7 @@ void TrackerHandler::predict(){
 
 		for (auto it = trackers.begin(); it != trackers.end();)
 		{
-            if (it != trackers.end() && (*it).age > max_age){
+            if (it != trackers.end() && (*it).age > maxAge){
                  it = trackers.erase(it);
                  continue;
             }
@@ -141,8 +141,8 @@ std::vector<Target> TrackerHandler::correct(){
     for (auto umd : unmatchedDetections)
     {
         KalmanTracker tracker;
-        tracker.init(detections[umd].box,id_counter);
-		id_counter++;
+        tracker.init(detections[umd].box,idCounter);
+		idCounter++;
         trackers.push_back(tracker);
     }
 	return targets;

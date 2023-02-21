@@ -6,7 +6,7 @@
 #include "detection/Detector.h"
 #include "tracking/TrackerHandler.h"
 #include "drawing.h"
-
+#include "yaml-cpp/yaml.h"
 
 
 
@@ -17,49 +17,28 @@
 int main(int argc, char * argv[]){
 
     spdlog::info("starting");
-
-    std::string coco ="models/coco.names";
-    std::string nnetFile ="models/yolov5s.onnx";
-    std::string inputFile ="rtsp://localhost:8554/in";
-    std::string outputFile ="appsrc ! videoconvert ! x264enc speed-preset=ultrafast bitrate=600 key-int-max=40 ! rtspclientsink location=rtsp://localhost:8554/out";
-    int isVideo=0;
+    std::string configFile = "config.yaml";
     int c;
-    while ((c = getopt (argc, argv, "hvc:n:i:o:")) != -1){
+    while ((c = getopt (argc, argv, "hf:")) != -1){
         switch(c) // note the colon (:) to indicate that 'b' has a parameter and is not a switch
         {
-            case 'c':
-                coco=optarg;
-                break;
-
-        case 'n':
-                nnetFile=optarg;
-                break;
-
-        case 'i':
-                inputFile=optarg;
-                break;
-        case 'o':
-                outputFile=optarg;
-                break;
-        case 'v':
-                isVideo=1;
-                break;
-
-        case 'h':
-            printf( "[-h, -v] [-c coco.names -n net.onnx -i video.mp4/stream -o video.mp4/stream] -- program to obtain predictions from image\n where:\n  -h  show this help text\n  -c  coco.names\n  -n  neural net weights\n  -i  input image\n  -o  output image\n");
-            exit(0);
+        case 'f':
+            configFile=optarg;
             break;
 
-        case -1:
+        case 'h':
+            printf( "[-h] [-f config.yaml] -- program to obtain predictions from image\n where:\n  -h  show this help text\n  -f configuration file\n");
+            exit(0);
             break;
         }
     }
 
+    // Load configuration
+    YAML::Node config = YAML::LoadFile(configFile);
 
     // Load class list.
     std::vector<std::string> class_list;
-
-    std::ifstream ifs(coco);
+    std::ifstream ifs(config["cocoFile"].as<std::string>());
     std::string line;
     while (std::getline(ifs, line))
     {
@@ -68,7 +47,7 @@ int main(int argc, char * argv[]){
 
     // Load model.
     cv::dnn::Net net;
-    net = cv::dnn::readNet(nnetFile);
+    net = cv::dnn::readNet(config["nnetFile"].as<std::string>());
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
 	net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 
@@ -76,20 +55,21 @@ int main(int argc, char * argv[]){
     Detector detector(net,class_list);
 
     //Create tracker
-    TrackerHandler tracker(0.3,4); //TODO parametrize 
+    TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>());
     std::vector<Target> targets;
 
     // Load video.
-    cv::VideoCapture cap(inputFile);
+    cv::VideoCapture cap(config["input"].as<std::string>());
     cv::Mat frame;
     int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
     int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
     cv::VideoWriter video;
-    if(isVideo){
+
+    if(config["outputType"].as<char>()=='v'){
         spdlog::info("is a video");
-        video.open(outputFile, cv::VideoWriter::fourcc('M','J','P','G'), 31, cv::Size(frame_width,frame_height));
+        video.open(config["output"].as<std::string>(), cv::VideoWriter::fourcc('M','J','P','G'), 31, cv::Size(frame_width,frame_height));
     }else{
-        video.open(outputFile,cv::CAP_GSTREAMER, 0, 16, cv::Size (frame_width, frame_height), true);
+        video.open(config["output"].as<std::string>(),cv::CAP_GSTREAMER, 0, 16, cv::Size (frame_width, frame_height), true);
     }
     
     cap >> frame;
