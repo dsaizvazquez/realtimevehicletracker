@@ -69,7 +69,7 @@ int main(int argc, char * argv[]){
         spdlog::info("is a video");
         video.open(config["output"].as<std::string>(), cv::VideoWriter::fourcc('M','J','P','G'), 31, cv::Size(frame_width,frame_height));
     }else{
-        video.open(config["output"].as<std::string>(),cv::CAP_GSTREAMER, 0, 16, cv::Size (frame_width, frame_height), true);
+        video.open(config["output"].as<std::string>(),cv::CAP_GSTREAMER, 0,config["fps"].as<int>(), cv::Size (frame_width, frame_height), true);
     }
     
     cap >> frame;
