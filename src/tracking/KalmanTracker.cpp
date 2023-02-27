@@ -70,9 +70,9 @@ cv::Rect KalmanTracker::getState()
 	return get_rect_xysr(s.at<float>(0, 0), s.at<float>(1, 0), s.at<float>(2, 0), s.at<float>(3, 0));
 }
 
-cv::Point KalmanTracker::getSpeed(){
+cv::Point2d KalmanTracker::getSpeed(){
 	cv::Mat s = kf.statePost;
-	return cv::Point(s.at<float>(4, 0),s.at<float>(5, 0));
+	return cv::Point2d(s.at<float>(4, 0),s.at<float>(5, 0));
 }
 
 cv::Rect KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)

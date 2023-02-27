@@ -5,7 +5,7 @@
 typedef struct Target
 {
 	float confidence;
-    cv::Point speed; 
+    cv::Point2d speed; 
 	cv::Rect box;
     int class_id;
     int id;

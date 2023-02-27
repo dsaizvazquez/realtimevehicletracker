@@ -10,3 +10,4 @@ For more information head to the [documentation](https://gitlab.dlr.de/saiz_da/d
 - https://github.com/mcximing/sort-cpp
 - https://www.kalmanfilter.net/default.aspx
 - https://docs.opencv.org/3.4/dd/d6a/classcv_1_1KalmanFilter.html
+- https://github.com/eminfedar/async-sockets-cpp

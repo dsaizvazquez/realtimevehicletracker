@@ -22,7 +22,7 @@ class KalmanTracker{
         cv::Rect predict();
         int correct(cv::Rect state);
         cv::Rect getState();
-        cv::Point getSpeed();
+        cv::Point2d getSpeed();
         int age = 0;
         int id = 0;
 

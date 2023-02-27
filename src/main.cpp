@@ -58,22 +58,26 @@ int main(int argc, char * argv[]){
     TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>());
     std::vector<Target> targets;
 
+    int skippedFrames =config["skippedFrames"].as<int>();
+
     // Load video.
     cv::VideoCapture cap(config["input"].as<std::string>());
     cv::Mat frame;
     int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
     int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    double fps = cap.get(cv::CAP_PROP_FPS)/skippedFrames;
+    spdlog::info(fps);
     cv::VideoWriter video;
 
     if(config["outputType"].as<char>()=='v'){
         spdlog::info("is a video");
-        video.open(config["output"].as<std::string>(), cv::VideoWriter::fourcc('M','J','P','G'), 31, cv::Size(frame_width,frame_height));
+        video.open(config["output"].as<std::string>(), cv::VideoWriter::fourcc('M','J','P','G'), 30, cv::Size(frame_width,frame_height));
     }else{
         video.open(config["output"].as<std::string>(),cv::CAP_GSTREAMER, 0,config["fps"].as<int>(), cv::Size (frame_width, frame_height), true);
     }
-    
+    double oldVal =0;
     cap >> frame;
-
+    int64 time=0;
     while(!(frame.empty())){
 
         //Step 1: detect the bounding boxes
@@ -109,15 +113,28 @@ int main(int argc, char * argv[]){
             // Draw bounding box.
             cv::rectangle(frame, cv::Point(left, top), cv::Point(left + width, top + height), BLUE, 3*THICKNESS);
             // Get the label for the class name and its confidence.
-            std::string label = cv::format("%d,%.2f,%.2d,%.2d",targets[i].id, targets[i].confidence, targets[i].speed.x,targets[i].speed.y);
+            //spdlog::info("speeds: {} {} px/frame {} {} px/s",targets[i].speed.x, targets[i].speed.y,targets[i].speed.x*fps,targets[i].speed.y*fps);
+            std::string label = cv::format("%d,%.2f,%.2f,%.2f",targets[i].id, targets[i].confidence, targets[i].speed.x*fps,targets[i].speed.y*fps);
             label = class_list[targets[i].class_id] + ":" + label;
             // Draw class labels.
             draw::draw_label(frame, label, left, top);
         }
+        double frameTime =cap.get(cv::CAP_PROP_POS_MSEC)-oldVal;
+        oldVal = cap.get(cv::CAP_PROP_POS_MSEC);
+        double del =(double)cv::getTickCount()-time;
+		time = cv::getTickCount();
+        std::string label = cv::format("Elapsed time : %f ms", 1000*del/cv::getTickFrequency());
+        std::string label2 = cv::format("Frame time : %f ms", frameTime);
+
+        putText(frame, label, cv::Point(20, 40), FONT_FACE, FONT_SCALE, RED);
+        putText(frame, label2, cv::Point(20, 60), FONT_FACE, FONT_SCALE, RED);
         spdlog::debug("writing frame");
+
+
 
         video.write(frame);
         cap >> frame;
+        for(int i = 0; i< skippedFrames; i++)  cap >> frame;
     }
     cap.release();
     video.release();
