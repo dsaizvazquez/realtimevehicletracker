@@ -13,13 +13,14 @@ typedef struct vector3f
 typedef struct SharedData
 {
     int id;
-    vector3f Gimbal; 
+    vector3f gimbal; 
     float altitude;
     std::uint16_t focalLength;
+    vector3f speed;
 	long timestamp;
 }SharedData;
 
-typedef std::string Packet; //change to SharedData when necessary
+typedef char * Packet; //change to SharedData when necessary
 
 class UDPConn 
 {

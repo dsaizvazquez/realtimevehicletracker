@@ -58,21 +58,27 @@ int KalmanTracker::correct(cv::Rect stateMat)
 	// update
 	kf.correct(measurement);
 	age=0;
+	cv::Mat s = kf.statePost;
+	posPx = cv::Point2d(s.at<float>(0, 0),s.at<float>(1, 0));
+	speedPx = cv::Point2d(s.at<float>(4, 0),s.at<float>(5, 0));
+	box = get_rect_xysr(s.at<float>(0, 0), s.at<float>(1, 0), s.at<float>(2, 0), s.at<float>(3, 0));
 
 	return 0;
 }
 
 
 // Return the current state vector
-cv::Rect KalmanTracker::getState()
+cv::Rect KalmanTracker::getBox()
 {
-	cv::Mat s = kf.statePost;
-	return get_rect_xysr(s.at<float>(0, 0), s.at<float>(1, 0), s.at<float>(2, 0), s.at<float>(3, 0));
+	return box;
 }
 
-cv::Point2d KalmanTracker::getSpeed(){
-	cv::Mat s = kf.statePost;
-	return cv::Point2d(s.at<float>(4, 0),s.at<float>(5, 0));
+cv::Point2d KalmanTracker::getSpeedInPx(){
+	return speedPx;
+}
+
+cv::Point2d KalmanTracker::getPosInPx(){
+	return posPx;
 }
 
 cv::Rect KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)
@@ -89,3 +95,15 @@ cv::Rect KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)
 
 	return cv::Rect(x, y, w, h);
 }
+
+Target KalmanTracker::getTarget(){
+	res.box = box;
+	res.speed = speedPx;
+    res.id = id;
+	res.confidence=confidence;
+    res.class_id=class_id;
+	return res;
+}
+
+void project(ProjectionParams params); //TODO
+Target estimateSpeed(); //TODO

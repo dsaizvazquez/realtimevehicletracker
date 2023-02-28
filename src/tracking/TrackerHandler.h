@@ -1,15 +1,8 @@
 #include "KalmanTracker.h"
 #include "../detection/Detector.h"
 #include "hungarian/Hungarian.h"
+#include "udpThread/udpConn.hpp"
 
-typedef struct Target
-{
-	float confidence;
-    cv::Point2d speed; 
-	cv::Rect box;
-    int class_id;
-    int id;
-}Target;
 
 class TrackerHandler{
 
@@ -27,17 +20,30 @@ class TrackerHandler{
 	std::set<int> allItems;
 	std::set<int> matchedItems;
 	std::vector<cv::Point> matchedPairs;
+
+
     std::vector<Target> targets;
     std::vector<Detection> detections;
+
+    UDPConn connection;
+    ProjectionParams params;
+
+    
 
     double GetIOU(cv::Rect bb_test, cv::Rect bb_gt);
 
     public:
-        TrackerHandler(double iouT, int age):iouThreshold(iouT),maxAge(age){};
+        TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port);
         void init(std::vector<Detection> detections);
         void predict();
         void match();
-        std::vector<Target> correct();
+        std::vector<Target> correct(); //DELETE RETURN
 
+        ProjectionParams getParams(SharedData data); //TODO
+        void projectToPlane();
+        void estimateSpeed(); 
+
+        
+        std::vector<Target> getTargets(); 
 
 };

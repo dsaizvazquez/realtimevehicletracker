@@ -55,7 +55,7 @@ int main(int argc, char * argv[]){
     Detector detector(net,class_list);
 
     //Create tracker
-    TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>());
+    TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>(),config["IP"].as<std::string>(),config["port"].as<int>());
     std::vector<Target> targets;
 
     int skippedFrames =config["skippedFrames"].as<int>();
@@ -102,6 +102,9 @@ int main(int argc, char * argv[]){
         
 
         //Step 3: Project Speed
+        // tracker.projectToPlane();
+        // tracker.estimateSpeed();
+        // targets = tracker.getTargets();
 
         //Step 4: Drawing
         for(int i=0;i<targets.size();i++){

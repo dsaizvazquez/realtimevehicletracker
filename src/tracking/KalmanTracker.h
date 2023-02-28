@@ -4,6 +4,21 @@
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
 
+typedef struct Target
+{
+	float confidence;
+    cv::Point2d speed; 
+	cv::Rect box;
+    int class_id;
+    int id;
+}Target;
+
+typedef struct ProjectionParams
+{
+	cv::Mat K;
+    cv::Mat R;
+    float H;
+}ProjectionParams;
 
 
 //TODO: Unfinished, basic structure in process
@@ -11,8 +26,15 @@ class KalmanTracker{
     
     cv::KalmanFilter kf;
     cv::Mat measurement;
+    
+    cv::Point2d posPx;
+    cv::Point2d speedPx;
+    cv::Rect box;
 
+    std::vector<cv::Point2d> posVector;
+    std::vector<cv::Point2d> speedVector;
 
+    Target res;
 
     cv::Rect get_rect_xysr(float cx, float cy, float s, float r);
 
@@ -21,10 +43,22 @@ class KalmanTracker{
         int init(cv::Rect initialState,int id);
         cv::Rect predict();
         int correct(cv::Rect state);
-        cv::Rect getState();
-        cv::Point2d getSpeed();
+
+        cv::Rect getBox();
+        cv::Point2d getSpeedInPx();
+        cv::Point2d getPosInPx();
+
+
+        void project(ProjectionParams params); //TODO
+        Target estimateSpeed(); //TODO
+
+        Target getTarget();
+
         int age = 0;
         int id = 0;
+        int class_id = 0;
+        float confidence = 0;
+
 
 
 

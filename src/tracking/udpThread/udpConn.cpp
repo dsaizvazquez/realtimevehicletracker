@@ -4,7 +4,7 @@ void UDPConn::init(std::string IPv4, std::uint16_t port){
     server.onRawMessageReceived = [&](const char* message, int length, std::string ipv4, std::uint16_t port) {
 
         //TODO IMPLEMENT PACKAGE
-        packet.store(message);
+        packet.store((char*)message);
         
         // ACK if necessary
         //server.SendTo(message, length, ipv4, port);

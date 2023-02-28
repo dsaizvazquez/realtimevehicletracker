@@ -1,5 +1,13 @@
 #include "TrackerHandler.h"
 
+TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port){
+
+	double iouThreshold = iouT;
+    int maxAge = age;
+	connection.init(IPv4,port);
+
+}
+
 
 void TrackerHandler::init(std::vector<Detection> newDetections){
     detections=newDetections;
@@ -112,7 +120,8 @@ double TrackerHandler::GetIOU(cv::Rect bb_test, cv::Rect bb_gt)
 }
 
 
-std::vector<Target> TrackerHandler::correct(){
+
+std::vector<Target>  TrackerHandler::correct(){
 
     int detIdx, trkIdx;
 
@@ -127,15 +136,11 @@ std::vector<Target> TrackerHandler::correct(){
         trackers[trkIdx].correct(detections[detIdx].box);
 		spdlog::debug("trackers corrected");
 
-        Target res;
-        res.box = trackers[trkIdx].getState();
-		res.speed = trackers[trkIdx].getSpeed();
-        res.id = trackers[trkIdx].id;
-        res.class_id=detections[detIdx].class_id;
-        res.confidence=detections[detIdx].confidence;
+        trackers[trkIdx].class_id=detections[detIdx].class_id;
+        trackers[trkIdx].confidence=detections[detIdx].confidence;
 		spdlog::debug("targets filled");
 
-        targets.push_back(res);
+        targets.push_back(trackers[trkIdx].getTarget());
     }
 
     for (auto umd : unmatchedDetections)
@@ -144,6 +149,34 @@ std::vector<Target> TrackerHandler::correct(){
         tracker.init(detections[umd].box,idCounter);
 		idCounter++;
         trackers.push_back(tracker);
+    }
+	return targets;
+
+}
+
+ void  TrackerHandler::projectToPlane(){
+	//params = getParams(connection.getPacket())
+	for(int i=0;i<trackers.size();i++){
+		//trackers[i].project(params);
+	}
+ }; 
+    
+void  TrackerHandler::estimateSpeed(){
+
+	for(int i=0;i<trackers.size();i++){
+		//trackers[i].estimateSpeed();
+	}
+
+};
+
+std::vector<Target> TrackerHandler::getTargets(){
+
+    targets.clear();
+	spdlog::debug("targets cleared");
+
+    for (unsigned int i = 0; i < trackers.size(); i++)
+    {
+        targets.push_back(trackers[i].getTarget());
     }
 	return targets;
 
