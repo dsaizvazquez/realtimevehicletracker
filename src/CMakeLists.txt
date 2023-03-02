@@ -4,6 +4,7 @@ include_directories("utils")
 add_subdirectory("detection")
 add_subdirectory("tracking")
 add_subdirectory("udp")
+add_subdirectory("projection")
 
 
 

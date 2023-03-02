@@ -28,20 +28,25 @@ class TrackerHandler{
     UDPConn connection;
     ProjectionParams params;
 
+    float aspectRatio=1;
+    float offsetX=0;
+    float offsetY=0;
+
     
 
     double GetIOU(cv::Rect bb_test, cv::Rect bb_gt);
 
     public:
-        TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port);
+        TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatio, float offsetX, float offsetY);
         void init(std::vector<Detection> detections);
         void predict();
         void match();
         std::vector<Target> correct(); //DELETE RETURN
 
-        ProjectionParams getParams(SharedData data); //TODO
+        void updateParams(SharedData data); 
+        
         void projectToPlane();
-        void estimateSpeed(); 
+        void estimateSpeed(float deltaTime); 
 
         
         std::vector<Target> getTargets(); 

@@ -5,19 +5,20 @@
 
 int KalmanTracker::init(cv::Rect initalState,int idNum)
 {
-	int stateNum = 7;
+	int stateNum = 8;
 	int measureNum = 4;
 	id=idNum;
 	kf = cv::KalmanFilter(stateNum, measureNum, 0);
 
 	kf.transitionMatrix = (cv::Mat_<float>(stateNum, stateNum) <<
-		1, 0, 0, 0, 1, 0, 0,
-		0, 1, 0, 0, 0, 1, 0,
-		0, 0, 1, 0, 0, 0, 1,
-		0, 0, 0, 1, 0, 0, 0,
-		0, 0, 0, 0, 1, 0, 0,
-		0, 0, 0, 0, 0, 1, 0,
-		0, 0, 0, 0, 0, 0, 1);
+		1, 0, 0, 0, 1, 0, 0, 0,
+		0, 1, 0, 0, 0, 1, 0, 0,
+		0, 0, 1, 0, 0, 0, 1, 0,
+		0, 0, 0, 1, 0, 0, 0, 1,
+		0, 0, 0, 0, 1, 0, 0, 0,
+		0, 0, 0, 0, 0, 1, 0, 0,
+		0, 0, 0, 0, 0, 0, 1, 0,
+		0, 0, 0, 0, 0, 0, 0, 1);
 
 	measurement = cv::Mat::zeros(measureNum, 1, CV_32F);
 
@@ -105,5 +106,14 @@ Target KalmanTracker::getTarget(){
 	return res;
 }
 
-void project(ProjectionParams params); //TODO
-Target estimateSpeed(); //TODO
+void KalmanTracker::project(ProjectionParams params){
+		cv::Mat position = (cv::Mat_<float>(0, 3) << posPx.x,posPx.y, 1);
+		posVector.push_back(projection::projectPointToFlatPlane(params.K,params.R,params.H,position));
+} 
+
+
+void KalmanTracker::estimateSpeed(float deltaTime){
+	int length = posVector.size();
+	cv::Point3d instantSpeed = (posVector[length-1]-posVector[length-2])/deltaTime;
+	speedVector.push_back(instantSpeed);
+}

@@ -4,6 +4,9 @@
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
 
+#include "../projection/projection.h"
+
+
 typedef struct Target
 {
 	float confidence;
@@ -31,8 +34,8 @@ class KalmanTracker{
     cv::Point2d speedPx;
     cv::Rect box;
 
-    std::vector<cv::Point2d> posVector;
-    std::vector<cv::Point2d> speedVector;
+    std::vector<cv::Point3d> posVector;
+    std::vector<cv::Point3d> speedVector;
 
     Target res;
 
@@ -49,8 +52,8 @@ class KalmanTracker{
         cv::Point2d getPosInPx();
 
 
-        void project(ProjectionParams params); //TODO
-        Target estimateSpeed(); //TODO
+        void project(ProjectionParams params); 
+        void estimateSpeed(float deltaTime);
 
         Target getTarget();
 
@@ -60,10 +63,10 @@ class KalmanTracker{
         float confidence = 0;
 
 
-
-
-
-    
 };
+
+
+
+
 
 #endif

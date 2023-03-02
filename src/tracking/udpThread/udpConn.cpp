@@ -3,9 +3,9 @@
 void UDPConn::init(std::string IPv4, std::uint16_t port){
     server.onRawMessageReceived = [&](const char* message, int length, std::string ipv4, std::uint16_t port) {
 
-        //TODO IMPLEMENT PACKAGE
-        packet.store((char*)message);
-        
+        std::lock_guard<std::mutex> lck {mtx};
+        packet = * (Packet*)message;
+
         // ACK if necessary
         //server.SendTo(message, length, ipv4, port);
     };
@@ -19,5 +19,7 @@ void UDPConn::init(std::string IPv4, std::uint16_t port){
 }
 
 Packet UDPConn::getPacket(){
-    return packet.load();
+    std::lock_guard<std::mutex> lck {mtx};
+    return packet;
+
 }

@@ -1,10 +1,23 @@
 #include "TrackerHandler.h"
 
-TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port){
+TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatiop, float offsetXp, float offsetYp){
 
-	double iouThreshold = iouT;
-    int maxAge = age;
+	iouThreshold = iouT;
+    maxAge = age;
+
+	aspectRatio =aspectRatiop;
+	offsetX=offsetXp;
+	offsetY=offsetYp;
+	params.K = (cv::Mat_<float>(3,3) <<
+                focalLengthp,       0,                         offsetX,
+                0,                 focalLengthp*aspectRatio,   offsetY,
+                0,                  0,                         1 );
+
+	
+	
 	connection.init(IPv4,port);
+
+
 
 }
 
@@ -153,18 +166,30 @@ std::vector<Target>  TrackerHandler::correct(){
 	return targets;
 
 }
+void TrackerHandler::updateParams(SharedData data){
 
- void  TrackerHandler::projectToPlane(){
-	//params = getParams(connection.getPacket())
+	params.H=data.altitude;
+
+	cv::Vec3f theta(data.pitch,0,data.yaw); //TODO make realistic angle changes
+	params.R=projection::rotationMatrixFromAngles(theta);
+
+	params.K.at<double>(0,0)=data.focalLength;
+	params.K.at<double>(0,0)=data.focalLength*aspectRatio;
+
+}
+
+
+void  TrackerHandler::projectToPlane(){
+	updateParams(connection.getPacket());
 	for(int i=0;i<trackers.size();i++){
-		//trackers[i].project(params);
+		trackers[i].project(params);
 	}
  }; 
     
-void  TrackerHandler::estimateSpeed(){
+void  TrackerHandler::estimateSpeed(float deltaTime){
 
 	for(int i=0;i<trackers.size();i++){
-		//trackers[i].estimateSpeed();
+		trackers[i].estimateSpeed(deltaTime);
 	}
 
 };
