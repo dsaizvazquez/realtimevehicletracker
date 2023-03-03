@@ -9,8 +9,7 @@ int main()
     UDPConn udpServer;
 
     
-    udpServer.init("127.0.0.1",8888);
-    cout<<"test"<<endl;
+    udpServer.init("127.0.0.1",8998);
     // You should do an input loop so the program will not terminated immediately:
     string input;
     getline(cin, input);

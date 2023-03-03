@@ -17,6 +17,12 @@ typedef struct SharedData
 	long timestamp;
 }SharedData;
 
+union Message {
+    SharedData data;
+    char * msg;
+};
+
+
 typedef SharedData Packet; //change to SharedData when necessary
 
 class UDPConn 

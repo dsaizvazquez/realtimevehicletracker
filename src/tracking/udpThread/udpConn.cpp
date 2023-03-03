@@ -1,10 +1,16 @@
 #include "udpConn.hpp"
 
+
+
 void UDPConn::init(std::string IPv4, std::uint16_t port){
+
     server.onRawMessageReceived = [&](const char* message, int length, std::string ipv4, std::uint16_t port) {
 
         std::lock_guard<std::mutex> lck {mtx};
-        packet = * (Packet*)message;
+        Message messagePacket;
+        memcpy(&messagePacket, message, length * sizeof(char));
+        spdlog::info(messagePacket.data.id);
+        packet = messagePacket.data;
 
         // ACK if necessary
         //server.SendTo(message, length, ipv4, port);

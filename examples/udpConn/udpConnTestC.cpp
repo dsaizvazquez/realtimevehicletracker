@@ -5,36 +5,28 @@
 
 using namespace std;
 
+union Message {
+    SharedData data;
+    char msg[sizeof(SharedData)];
+};
+
 int main()
 {
     // Our constants:
     const string IP = "localhost";
-    const uint16_t PORT = 8888;
-
+    const uint16_t PORT = 8998;
     // Initialize socket.
     UDPSocket udpSocket(true); // "true" to use Connection on UDP. Default is "false".
     udpSocket.Connect(IP, PORT);
 
-
-    // Send String:
-    SharedData data = {0,12,12,40.1,30,2921834791827349618};
-    //udpSocket.SendTo("ABCDEFGH", IP, PORT); // If you want to connectless
-    // If you want to use std::string:
-    /*
-    udpSocket.onMessageReceived = [&](string message, string ipv4, uint16_t port) {
-        cout << ipv4 << ":" << port << " => " << message << endl;
-    };
-    */
+    Message message = {7,12,12,40.1,30,2921834791827349618};
 
     // You should do an input loop so the program will not terminated immediately:
     string input;
     getline(cin, input);
     while (input != "exit")
     {
-        
-        char* const buf = reinterpret_cast<char*>(&data);
-        cout<<buf<<endl;
-        udpSocket.Send(buf);
+        udpSocket.Send(message.msg,sizeof(SharedData));
         getline(cin, input);
     }
 
