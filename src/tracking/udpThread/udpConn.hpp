@@ -22,7 +22,6 @@ union Message {
     char * msg;
 };
 
-
 typedef SharedData Packet; //change to SharedData when necessary
 
 class UDPConn 

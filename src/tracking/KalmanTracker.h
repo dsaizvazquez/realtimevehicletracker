@@ -20,7 +20,7 @@ typedef struct ProjectionParams
 {
 	cv::Mat K;
     cv::Mat R;
-    float H;
+    float H=10;
 }ProjectionParams;
 
 

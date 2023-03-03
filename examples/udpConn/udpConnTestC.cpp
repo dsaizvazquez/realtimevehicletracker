@@ -5,10 +5,6 @@
 
 using namespace std;
 
-union Message {
-    SharedData data;
-    char msg[sizeof(SharedData)];
-};
 
 int main()
 {

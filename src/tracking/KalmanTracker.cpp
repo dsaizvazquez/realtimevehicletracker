@@ -60,7 +60,8 @@ int KalmanTracker::correct(cv::Rect stateMat)
 	kf.correct(measurement);
 	age=0;
 	cv::Mat s = kf.statePost;
-	posPx = cv::Point2d(s.at<float>(0, 0),s.at<float>(1, 0));
+	cv::Point2d pos(s.at<float>(0, 0),s.at<float>(1, 0));
+	posPx = pos;
 	speedPx = cv::Point2d(s.at<float>(4, 0),s.at<float>(5, 0));
 	box = get_rect_xysr(s.at<float>(0, 0), s.at<float>(1, 0), s.at<float>(2, 0), s.at<float>(3, 0));
 
@@ -107,7 +108,8 @@ Target KalmanTracker::getTarget(){
 }
 
 void KalmanTracker::project(ProjectionParams params){
-		cv::Mat position = (cv::Mat_<float>(0, 3) << posPx.x,posPx.y, 1);
+		cv::Mat img = (cv::Mat_<int>(3,3) << 1, 0, 1, 0, -2, 0, 3, 0, 3);
+		cv::Mat position = (cv::Mat_<float>(3,1) << posPx.x, posPx.y, 1);
 		posVector.push_back(projection::projectPointToFlatPlane(params.K,params.R,params.H,position));
 } 
 

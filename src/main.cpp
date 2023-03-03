@@ -102,9 +102,10 @@ int main(int argc, char * argv[]){
         
 
         //Step 3: Project Speed
-        // tracker.projectToPlane();
-        // tracker.estimateSpeed();
-        // targets = tracker.getTargets();
+        tracker.projectToPlane();
+        double frameTime =cap.get(cv::CAP_PROP_POS_MSEC)-oldVal;
+        tracker.estimateSpeed(frameTime);
+        targets = tracker.getTargets();
 
         //Step 4: Drawing
         for(int i=0;i<targets.size();i++){
@@ -113,16 +114,15 @@ int main(int argc, char * argv[]){
             int top = box.y;
             int width = box.width;
             int height = box.height;
-            // Draw bounding box.
+            
             cv::rectangle(frame, cv::Point(left, top), cv::Point(left + width, top + height), BLUE, 3*THICKNESS);
-            // Get the label for the class name and its confidence.
             //spdlog::info("speeds: {} {} px/frame {} {} px/s",targets[i].speed.x, targets[i].speed.y,targets[i].speed.x*fps,targets[i].speed.y*fps);
             std::string label = cv::format("%d,%.2f,%.2f,%.2f",targets[i].id, targets[i].confidence, targets[i].speed.x*fps,targets[i].speed.y*fps);
             label = class_list[targets[i].class_id] + ":" + label;
             // Draw class labels.
             draw::draw_label(frame, label, left, top);
         }
-        double frameTime =cap.get(cv::CAP_PROP_POS_MSEC)-oldVal;
+        
         oldVal = cap.get(cv::CAP_PROP_POS_MSEC);
         double del =(double)cv::getTickCount()-time;
 		time = cv::getTickCount();
