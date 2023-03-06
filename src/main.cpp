@@ -12,8 +12,6 @@
 #include "yaml-cpp/yaml.h"
 
 
-int processStream();
-
 
 
 
@@ -83,6 +81,12 @@ int main(int argc, char * argv[]){
     spdlog::info("Tracker and Detector initialized");
     float delay = config["errorDelay"].as<float>();
 
+    //display colors create
+    cv::RNG rng(0xFFFFFFFF);
+    int colorNum = 20;
+    cv::Scalar randColor[colorNum];
+    for (int i = 0; i < colorNum; i++) rng.fill(randColor[i], cv::RNG::UNIFORM, 0, 256);
+
     // Load video.
     cv::VideoCapture cap;
     cv::VideoWriter video;
@@ -146,13 +150,16 @@ int main(int argc, char * argv[]){
                     int top = box.y;
                     int width = box.width;
                     int height = box.height;
+                    cv::Scalar color = randColor[targets[i].id % colorNum];
                     
-                    cv::rectangle(frame, cv::Point(left, top), cv::Point(left + width, top + height), BLUE, 3*THICKNESS);
+                    cv::rectangle(frame, cv::Point(left, top), cv::Point(left + width, top + height), color, 3*THICKNESS);
                     //spdlog::info("speeds: {} {} px/frame {} {} px/s",targets[i].speed.x, targets[i].speed.y,targets[i].speed.x*fps,targets[i].speed.y*fps);
-                    std::string label = cv::format("%d,%.2f,%.2f,%.2f",targets[i].id, targets[i].confidence, targets[i].speed.x*fps,targets[i].speed.y*fps);
+                    std::string label = cv::format("%d,%.2f",targets[i].id, targets[i].confidence);
+                    std::string labelBottom = cv::format("%.2f,%.2f",targets[i].speed.x*fps,targets[i].speed.y*fps);
                     label = class_list[targets[i].class_id] + ":" + label;
                     // Draw class labels.
-                    draw::draw_label(frame, label, left, top);
+                    draw::draw_label(frame, label, left, top,color);
+                    draw::draw_label(frame, labelBottom, left, top+height,color);
                 }
                 
                 oldVal = cap.get(cv::CAP_PROP_POS_MSEC);

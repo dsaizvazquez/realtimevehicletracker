@@ -3,9 +3,9 @@
 #include <opencv2/opencv.hpp>
 
 // Text parameters.
-const float FONT_SCALE = 0.45;
+const float FONT_SCALE = 0.5;
 const int FONT_FACE = cv::FONT_HERSHEY_SIMPLEX;
-const int THICKNESS = 1;
+const int THICKNESS = 2;
  
 // Colors.
 cv::Scalar BLACK = cv::Scalar(0,0,0);
@@ -16,8 +16,10 @@ cv::Scalar YELLOW = cv::Scalar(0, 255, 255);
 cv::Scalar RED = cv::Scalar(0,0,255);
 
 
+
+
 namespace draw{
-    void draw_label(cv::Mat& input_image, std::string label, int left, int top)
+    void draw_label(cv::Mat& input_image, std::string label, int left, int top,cv::Scalar color)
     {
         // Display the label at the top of the bounding box.
         int baseLine;
@@ -30,7 +32,7 @@ namespace draw{
         // Draw white rectangle.
         rectangle(input_image, tlc, brc, WHITE, cv::FILLED);
         // Put the label on the black rectangle.
-        putText(input_image, label, cv::Point(left, top + label_size.height), FONT_FACE, FONT_SCALE, BLACK, THICKNESS);
+        putText(input_image, label, cv::Point(left, top + label_size.height), FONT_FACE, FONT_SCALE, color, THICKNESS);
     }
 } 
 
