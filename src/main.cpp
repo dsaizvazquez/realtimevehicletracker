@@ -6,10 +6,13 @@
 #include "spdlog/sinks/daily_file_sink.h"
 #include <unistd.h>
 
+#include "tcpserver.hpp"
+
 #include "detection/Detector.h"
 #include "tracking/TrackerHandler.h"
 #include "drawing.h"
 #include "yaml-cpp/yaml.h"
+
 
 
 
@@ -68,6 +71,36 @@ int main(int argc, char * argv[]){
 	net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 
     spdlog::info("NN loaded");
+
+    //create TCP-------------------------------------------------------------------------------------------------
+    // Initialize server socket..
+    TCPServer tcpServer;
+    std::vector<TCPSocket *> clientList;
+    // When a new client connected:
+    tcpServer.onNewConnection = [&](TCPSocket *newClient) {
+        spdlog::info("new client with {} address and {} port has started",newClient->remoteAddress(),newClient->remotePort());
+        clientList.push_back(newClient);
+        newClient->onMessageReceived = [newClient](string message) {
+            spdlog::info("{} sends {}",newClient->remoteAddress(),message);
+            newClient->Send("OK!");
+        };
+        
+        newClient->onSocketClosed = [newClient](int errorCode) {
+            spdlog::info("Socket closed: {}:{} with error {}",newClient->remoteAddress(),newClient->remotePort(),errorCode);
+        };
+    };
+
+    // Bind the server to a port.
+    tcpServer.Bind(12520, [](int errorCode, string errorMessage) {
+        // BINDING FAILED:
+        spdlog::info("error binding: {}{}",errorCode, errorMessage);
+    });
+
+    // Start Listening the server.
+    tcpServer.Listen([](int errorCode, string errorMessage) {
+        spdlog::info("error starting listening: {}{}",errorCode, errorMessage);
+    });
+
 
     // Create detector
     Detector detector(net,class_list);
@@ -176,6 +209,12 @@ int main(int argc, char * argv[]){
 
                 video.write(frame);
                 cap >> frame;
+                for(int i=0;i<clientList.size();i++){
+                    if(clientList[i]->remotePort()==0){
+                        clientList.erase(clientList.begin()+i);
+                    }
+                    clientList[i]->Send("HI");
+                }
                 for(int i = 0; i< skippedFrames; i++)  cap >> frame;
             }
         }
