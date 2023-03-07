@@ -7,19 +7,53 @@
 #include <unistd.h>
 
 #include "tcpserver.hpp"
+#include <json/json.h>
 
 #include "detection/Detector.h"
 #include "tracking/TrackerHandler.h"
 #include "drawing.h"
 #include "yaml-cpp/yaml.h"
 
+typedef int status;
+namespace STATUS{
+    status INITIALIZING = 0;
+    status ERROR_INPUT = 1;
+    status NORMAL = 2;
+}
 
 
+std::string createJSON(int status, std::string input, std::vector<Target> targets,std::vector<std::string> class_list,Json::StreamWriterBuilder wbuilder){
+    Json::Value root; 
+    root["status"] = status;
+    root["input"] = input;
 
+    Json::Value array;
+    for(Target target : targets)
+    {
+        Json::Value targetVal;
+        targetVal["confidence"] = target.confidence ;
+        targetVal["class_id"] = class_list[target.class_id];
+        targetVal["id"] = target.id;
+        targetVal["speed"] = target.speed.x;
+        array.append(targetVal);
+    }
+    root["targets"] = array; 
+    return Json::writeString(wbuilder, root);
+    
+}
 
+void sendClients(std::vector<TCPSocket *> clientList, std::string msg){
+    for(int i=0;i<clientList.size();i++){
+                    if(clientList[i]->remotePort()==0){
+                        clientList.erase(clientList.begin()+i);
+                    }
+                    clientList[i]->Send(msg);
+    }
+}
 
 int main(int argc, char * argv[]){
 
+    status status=STATUS::INITIALIZING;
     std::string configFile = "config.yaml";
     int c;
     while ((c = getopt (argc, argv, "hf:")) != -1){
@@ -53,6 +87,12 @@ int main(int argc, char * argv[]){
     spdlog::set_default_logger(std::make_shared<spdlog::logger>(logger));
     spdlog::flush_every(std::chrono::seconds(3));
     spdlog::info("Configuration loaded");
+
+    //create JSON writer
+    Json::StreamWriterBuilder wbuilder;
+    wbuilder["precision"]=2;
+    wbuilder["commentStyle"] = "None";
+    wbuilder["indentation"] = ""; //The JSON document is written in a single line
 
 
     // Load class list.
@@ -91,7 +131,7 @@ int main(int argc, char * argv[]){
     };
 
     // Bind the server to a port.
-    tcpServer.Bind(12520, [](int errorCode, string errorMessage) {
+    tcpServer.Bind(config["tcpPort"].as<int>(), [](int errorCode, string errorMessage) {
         // BINDING FAILED:
         spdlog::info("error binding: {}{}",errorCode, errorMessage);
     });
@@ -100,6 +140,10 @@ int main(int argc, char * argv[]){
     tcpServer.Listen([](int errorCode, string errorMessage) {
         spdlog::info("error starting listening: {}{}",errorCode, errorMessage);
     });
+
+    //started update counter
+    int updateCount=0;
+    int updateRate = config["updateRate"].as<int>();
 
 
     // Create detector
@@ -123,14 +167,19 @@ int main(int argc, char * argv[]){
     // Load video.
     cv::VideoCapture cap;
     cv::VideoWriter video;
+    std::string input =config["input"].as<std::string>();
+
     while(true){
-        cap.open(config["input"].as<std::string>());
+        cap.open(input);
         if(!cap.isOpened()){
+            status = STATUS::ERROR_INPUT;
             spdlog::warn("Input is not ready, trying again in {} secs",delay);
+            sendClients(clientList, "{\"status\":"+std::to_string(status)+"}");
             usleep(delay*1000000);
             continue;
         }else{
-            spdlog::info("Input {} is ready",config["input"].as<std::string>() );
+            status = STATUS::NORMAL;
+            spdlog::info("Input {} is ready",input);
             cv::Mat frame;
             int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
             int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -209,12 +258,13 @@ int main(int argc, char * argv[]){
 
                 video.write(frame);
                 cap >> frame;
-                for(int i=0;i<clientList.size();i++){
-                    if(clientList[i]->remotePort()==0){
-                        clientList.erase(clientList.begin()+i);
-                    }
-                    clientList[i]->Send("HI");
+                if(updateCount>updateRate){
+                    std::string pkg = createJSON(status, input, targets,class_list,wbuilder);
+                    sendClients(clientList, pkg);
+                    updateCount=0;
                 }
+                updateCount++;
+                
                 for(int i = 0; i< skippedFrames; i++)  cap >> frame;
             }
         }

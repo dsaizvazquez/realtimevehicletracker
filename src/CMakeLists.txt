@@ -13,4 +13,4 @@ add_executable (main ${SOURCES_FILE} "main.cpp")
 
 target_link_libraries(main ${OpenCV_LIBS})
 target_link_libraries(main ${OPENCV_LDFLAGS})
-target_link_libraries(main yaml-cpp detectionLib trackingLib udpLib)
+target_link_libraries(main yaml-cpp detectionLib trackingLib udpLib jsoncpp_lib)
