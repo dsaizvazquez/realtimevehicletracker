@@ -201,6 +201,7 @@ std::vector<Target> TrackerHandler::getTargets(){
 
     for (unsigned int i = 0; i < trackers.size(); i++)
     {
+		if(targets[i].confidence<CONFIDENCE_THRESHOLD) continue;
         targets.push_back(trackers[i].getTarget());
     }
 	return targets;

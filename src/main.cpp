@@ -6,17 +6,62 @@
 #include "spdlog/sinks/daily_file_sink.h"
 #include <unistd.h>
 
+#include "tcpserver.hpp"
+#include <json/json.h>
+
 #include "detection/Detector.h"
 #include "tracking/TrackerHandler.h"
 #include "drawing.h"
 #include "yaml-cpp/yaml.h"
 
+typedef int status;
+namespace STATUS{
+    status INITIALIZING = 0;
+    status ERROR_INPUT = 1;
+    status NORMAL = 2;
+}
 
+const int colorNum = 20;
+cv::Scalar randColor[colorNum];
 
+std::string createJSON(int status, std::string input, std::vector<Target> targets,std::vector<std::string> class_list,Json::StreamWriterBuilder wbuilder){
+    Json::Value root; 
+    int color[3];
 
+    root["status"] = status;
+    root["input"] = input;
+
+    Json::Value array;
+    for(Target target : targets)
+    {
+        Json::Value targetVal;
+        targetVal["confidence"] = target.confidence ;
+        targetVal["class_id"] = class_list[target.class_id];
+        targetVal["id"] = target.id;
+        cv::Scalar color =randColor[target.id % colorNum];
+        Json::Value colorArray;
+        for(int i=0;i<3;i++) colorArray.append(color[i]);
+        targetVal["color"] = colorArray;
+        targetVal["speed"] = target.speed.x;
+        array.append(targetVal);
+    }
+    root["targets"] = array; 
+    return Json::writeString(wbuilder, root);
+    
+}
+
+void sendClients(std::vector<TCPSocket *> clientList, std::string msg){
+    for(int i=0;i<clientList.size();i++){
+                    if(clientList[i]->remotePort()==0){
+                        clientList.erase(clientList.begin()+i);
+                    }
+                    clientList[i]->Send(msg);
+    }
+}
 
 int main(int argc, char * argv[]){
 
+    status status=STATUS::INITIALIZING;
     std::string configFile = "config.yaml";
     int c;
     while ((c = getopt (argc, argv, "hf:")) != -1){
@@ -51,6 +96,12 @@ int main(int argc, char * argv[]){
     spdlog::flush_every(std::chrono::seconds(3));
     spdlog::info("Configuration loaded");
 
+    //create JSON writer
+    Json::StreamWriterBuilder wbuilder;
+    wbuilder["precision"]=2;
+    wbuilder["commentStyle"] = "None";
+    wbuilder["indentation"] = ""; //The JSON document is written in a single line
+
 
     // Load class list.
     std::vector<std::string> class_list;
@@ -69,6 +120,40 @@ int main(int argc, char * argv[]){
 
     spdlog::info("NN loaded");
 
+    //create TCP-------------------------------------------------------------------------------------------------
+    // Initialize server socket..
+    TCPServer tcpServer;
+    std::vector<TCPSocket *> clientList;
+    // When a new client connected:
+    tcpServer.onNewConnection = [&](TCPSocket *newClient) {
+        spdlog::info("new client with {} address and {} port has started",newClient->remoteAddress(),newClient->remotePort());
+        clientList.push_back(newClient);
+        newClient->onMessageReceived = [newClient](string message) {
+            spdlog::info("{} sends {}",newClient->remoteAddress(),message);
+            newClient->Send("OK!");
+        };
+        
+        newClient->onSocketClosed = [newClient](int errorCode) {
+            spdlog::info("Socket closed: {}:{} with error {}",newClient->remoteAddress(),newClient->remotePort(),errorCode);
+        };
+    };
+
+    // Bind the server to a port.
+    tcpServer.Bind(config["tcpPort"].as<int>(), [](int errorCode, string errorMessage) {
+        // BINDING FAILED:
+        spdlog::info("error binding: {}{}",errorCode, errorMessage);
+    });
+
+    // Start Listening the server.
+    tcpServer.Listen([](int errorCode, string errorMessage) {
+        spdlog::info("error starting listening: {}{}",errorCode, errorMessage);
+    });
+
+    //started update counter
+    int updateCount=0;
+    int updateRate = config["updateRate"].as<int>();
+
+
     // Create detector
     Detector detector(net,class_list);
 
@@ -83,21 +168,25 @@ int main(int argc, char * argv[]){
 
     //display colors create
     cv::RNG rng(0xFFFFFFFF);
-    int colorNum = 20;
-    cv::Scalar randColor[colorNum];
+
     for (int i = 0; i < colorNum; i++) rng.fill(randColor[i], cv::RNG::UNIFORM, 0, 256);
 
     // Load video.
     cv::VideoCapture cap;
     cv::VideoWriter video;
+    std::string input =config["input"].as<std::string>();
+
     while(true){
-        cap.open(config["input"].as<std::string>());
+        cap.open(input);
         if(!cap.isOpened()){
+            status = STATUS::ERROR_INPUT;
             spdlog::warn("Input is not ready, trying again in {} secs",delay);
+            sendClients(clientList, "{\"status\":"+std::to_string(status)+"}");
             usleep(delay*1000000);
             continue;
         }else{
-            spdlog::info("Input {} is ready",config["input"].as<std::string>() );
+            status = STATUS::NORMAL;
+            spdlog::info("Input {} is ready",input);
             cv::Mat frame;
             int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
             int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -145,6 +234,7 @@ int main(int argc, char * argv[]){
 
                 //Step 4: Drawing
                 for(int i=0;i<targets.size();i++){
+                    
                     cv::Rect box = targets[i].box;
                     int left = box.x;
                     int top = box.y;
@@ -176,6 +266,13 @@ int main(int argc, char * argv[]){
 
                 video.write(frame);
                 cap >> frame;
+                if(updateCount>updateRate){
+                    std::string pkg = createJSON(status, input, targets,class_list,wbuilder);
+                    sendClients(clientList, pkg);
+                    updateCount=0;
+                }
+                updateCount++;
+                
                 for(int i = 0; i< skippedFrames; i++)  cap >> frame;
             }
         }
@@ -185,6 +282,7 @@ int main(int argc, char * argv[]){
     
     cap.release();
     video.release();
+
     spdlog::info("end");
 
     return 0;
