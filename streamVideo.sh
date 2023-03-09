@@ -1,0 +1,1 @@
+ffmpeg -re -stream_loop -1 -i $1 -vcodec libx264 -bf 0  -c copy -f rtsp rtsp://localhost:8554/in

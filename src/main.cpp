@@ -21,9 +21,13 @@ namespace STATUS{
     status NORMAL = 2;
 }
 
+const int colorNum = 20;
+cv::Scalar randColor[colorNum];
 
 std::string createJSON(int status, std::string input, std::vector<Target> targets,std::vector<std::string> class_list,Json::StreamWriterBuilder wbuilder){
     Json::Value root; 
+    int color[3];
+
     root["status"] = status;
     root["input"] = input;
 
@@ -34,6 +38,10 @@ std::string createJSON(int status, std::string input, std::vector<Target> target
         targetVal["confidence"] = target.confidence ;
         targetVal["class_id"] = class_list[target.class_id];
         targetVal["id"] = target.id;
+        cv::Scalar color =randColor[target.id % colorNum];
+        Json::Value colorArray;
+        for(int i=0;i<3;i++) colorArray.append(color[i]);
+        targetVal["color"] = colorArray;
         targetVal["speed"] = target.speed.x;
         array.append(targetVal);
     }
@@ -160,8 +168,7 @@ int main(int argc, char * argv[]){
 
     //display colors create
     cv::RNG rng(0xFFFFFFFF);
-    int colorNum = 20;
-    cv::Scalar randColor[colorNum];
+
     for (int i = 0; i < colorNum; i++) rng.fill(randColor[i], cv::RNG::UNIFORM, 0, 256);
 
     // Load video.
@@ -227,6 +234,7 @@ int main(int argc, char * argv[]){
 
                 //Step 4: Drawing
                 for(int i=0;i<targets.size();i++){
+                    
                     cv::Rect box = targets[i].box;
                     int left = box.x;
                     int top = box.y;
@@ -274,6 +282,7 @@ int main(int argc, char * argv[]){
     
     cap.release();
     video.release();
+
     spdlog::info("end");
 
     return 0;
