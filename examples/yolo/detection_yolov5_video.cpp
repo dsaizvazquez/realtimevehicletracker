@@ -138,7 +138,7 @@ int main()
     vector<string> class_list;
     spdlog::info("starting");
 
-    ifstream ifs("/home/ubuntu/opencv_tests/models/coco.names");
+    ifstream ifs("/home/ubuntu/realtimevehicletracker/models/coco.names");
     string line;
     while (getline(ifs, line))
     {
@@ -147,12 +147,12 @@ int main()
 
     // Load model.
     Net net;
-    net = readNet("/home/ubuntu/opencv_tests/models/yolov5s.onnx");
+    net = readNet("/home/ubuntu/realtimevehicletracker/models/yolov5s.onnx");
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
 	net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 
     // Load video.
-    VideoCapture cap("/home/ubuntu/opencv_tests/video.mp4");
+    VideoCapture cap("/home/ubuntu/realtimevehicletracker/video4.mp4");
     Mat frame;
     int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
     int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);

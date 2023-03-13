@@ -28,6 +28,7 @@ void TrackerHandler::init(std::vector<Detection> newDetections){
                 // initialize kalman trackers using first detections.
                 for (unsigned int i = 0; i < detections.size(); i++)
                 {
+					if(detections[i].box.height==0) continue;
                     KalmanTracker trk;
                     trk.init(detections[i].box,idCounter);
 					idCounter++;

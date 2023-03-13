@@ -117,7 +117,7 @@ int main(int argc, char * argv[]){
     net = cv::dnn::readNet(config["nnetFile"].as<std::string>());
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
 	net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
-
+    net.enableWinograd(false);
     spdlog::info("NN loaded");
 
     //create TCP-------------------------------------------------------------------------------------------------
@@ -211,7 +211,6 @@ int main(int argc, char * argv[]){
 
 
                 //Step 2: tracking
-                
                 tracker.init(detections);
                 spdlog::debug("initialized");
 
