@@ -117,7 +117,6 @@ int main(int argc, char * argv[]){
     net = cv::dnn::readNet(config["nnetFile"].as<std::string>());
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
 	net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
-    net.enableWinograd(false);
     spdlog::info("NN loaded");
 
     //create TCP-------------------------------------------------------------------------------------------------
@@ -155,7 +154,10 @@ int main(int argc, char * argv[]){
 
 
     // Create detector
-    Detector detector(net,class_list);
+    Detector detector(net,class_list,config["YOLOv"].as<int>() );
+    detector.INPUT_HEIGHT=config["INPUT_HEIGHT"].as<float>();
+    detector.INPUT_WIDTH=config["INPUT_WIDTH"].as<float>();
+
 
     //Create tracker
     TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>(),config["IP"].as<std::string>(),config["port"].as<int>(),config["focalLength"].as<float>(),config["aspectRatio"].as<float>(),config["offsetX"].as<float>(),config["offsetY"].as<float>());

@@ -28,23 +28,14 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
     int rows = outputs[0].size[1];
     int dimensions = outputs[0].size[2];
 
-    bool yolov8 = false;
-    // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
-    // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
-    if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
-    {
-        yolov8 = true;
+    if(yolov==YOLOV8){
+        // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
         rows = outputs[0].size[2];
         dimensions = outputs[0].size[1];
-
         outputs[0] = outputs[0].reshape(1, dimensions);
         cv::transpose(outputs[0], outputs[0]);
-    }
-    float *data = (float *)outputs[0].data;
-
-    for (int i = 0; i < rows; ++i)
-    {
-        if (yolov8)
+        float *data = (float *)outputs[0].data;
+        for (int i = 0; i < rows; ++i)
         {
             float *classes_scores = data+4;
 
@@ -71,9 +62,14 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
                 int height = int(h * y_factor);
 
                 boxes.push_back(cv::Rect(left, top, width, height));
+                data += dimensions;
+
             }
         }
-        else // yolov5
+    }else if(yolov==YOLOV5){
+        // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
+        float *data = (float *)outputs[0].data;
+        for (int i = 0; i < rows; ++i)
         {
             float confidence = data[4];
 
@@ -87,7 +83,7 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
 
                 cv::minMaxLoc(scores, 0, &max_class_score, 0, &class_id);
 
-                if (max_class_score > CONFIDENCE_THRESHOLD)
+                if (max_class_score > SCORE_THRESHOLD)
                 {
                     confidences.push_back(confidence);
                     class_ids.push_back(class_id.x);
@@ -104,12 +100,50 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
                     int height = int(h * y_factor);
 
                     boxes.push_back(cv::Rect(left, top, width, height));
+                    data += dimensions;
+
                 }
             }
         }
-
-        data += dimensions;
+    }else if(yolov==YOLOV7){
+        std::sort(outputs.begin(), outputs.end(), [](cv::Mat &A, cv::Mat &B) {return A.size[2] > B.size[2]; });
+        float* pdata = (float*)outputs[0].data;
+        int net_width = class_name.size() + 5;
+        for (int stride = 0; stride < strideSize; stride++) {    //stride
+		float* pdata = (float*)outputs[stride].data;
+		int grid_x = (int)(INPUT_WIDTH / netStride[stride]);
+		int grid_y = (int)(INPUT_HEIGHT / netStride[stride]);
+		for (int anchor = 0; anchor < 3; anchor++) {	//anchors
+			const float anchor_w = netAnchors[stride][anchor * 2];
+			const float anchor_h = netAnchors[stride][anchor * 2 + 1];
+			for (int i = 0; i < grid_y; i++) {
+				for (int j = 0; j < grid_x; j++) {
+					float box_score = sigmoid_x(pdata[4]); ;
+					if (box_score >= CONFIDENCE_THRESHOLD) {
+						cv::Mat scores(1, class_name.size(), CV_32FC1, pdata + 5);
+						cv::Point classIdPoint;
+						double max_class_socre;
+						minMaxLoc(scores, 0, &max_class_socre, 0, &classIdPoint);
+						max_class_socre = sigmoid_x(max_class_socre);
+						if (max_class_socre >= SCORE_THRESHOLD) {
+							float x = (sigmoid_x(pdata[0]) * 2.f - 0.5f + j) * netStride[stride];  //x
+							float y = (sigmoid_x(pdata[1]) * 2.f - 0.5f + i) * netStride[stride];   //y
+							float w = powf(sigmoid_x(pdata[2]) * 2.f, 2.f) * anchor_w;   //w
+							float h = powf(sigmoid_x(pdata[3]) * 2.f, 2.f) * anchor_h;  //h
+							int left = (int)(x - 0.5 * w) * x_factor + 0.5;
+							int top = (int)(y - 0.5 * h) * y_factor + 0.5;
+							class_ids.push_back(classIdPoint.x);
+							confidences.push_back(max_class_socre * box_score);
+							boxes.push_back(cv::Rect(left, top, int(w * x_factor), int(h * y_factor)));
+						}
+					}
+					pdata += net_width;
+				}
+			}
+		}
+	}
     }
+
     // Perform Non-Maximum Suppression and draw predictions.
     std::vector<int> indices;
     

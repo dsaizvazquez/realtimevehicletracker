@@ -5,8 +5,10 @@
 #include <fstream>
 #include <spdlog/spdlog.h>
 
+const int YOLOV8 = 8;
+const int YOLOV5 = 5;
+const int YOLOV7 = 7;
 
-#include "constants.h"
 
 typedef struct Detection
 {
@@ -24,12 +26,27 @@ class Detector {
     
     std::vector<cv::Mat> outputs;
     std::vector<Detection> detections;
+    int yolov =5;
+
+    //yolov7 parsing variables
+    const int strideSize = 3;   //stride size
+    const float netStride[4] = { 8, 16.0,32,64 }; //net stride
+    const float netAnchors[3][6] = { {12, 16, 19, 36, 40, 28},{36, 75, 76, 55, 72, 146},{142, 110, 192, 243, 459, 401} }; //net anchors
+    float sigmoid_x(float x)
+    {
+      return static_cast<float>(1.f / (1.f + exp(-x)));
+    }
 
   public:
+    float INPUT_WIDTH = 640.0;
+    float INPUT_HEIGHT = 640.0;
+    float SCORE_THRESHOLD = 0.5;
+    float NMS_THRESHOLD = 0.45;
+    float CONFIDENCE_THRESHOLD = 0.45;
     int_fast8_t forward(cv::Mat &input_image);
     int_fast8_t process(float x_factor,float y_factor);
     std::vector<Detection> detect(cv::Mat &input_image);
-    Detector(cv::dnn::Net &neti, const std::vector<std::string> &class_namei) :net(neti), class_name(class_namei){};
+    Detector(cv::dnn::Net &neti, const std::vector<std::string> &class_namei, int yolo) :net(neti), class_name(class_namei), yolov(yolo){};
 
 };
 
