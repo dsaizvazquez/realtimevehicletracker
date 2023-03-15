@@ -13,3 +13,4 @@ For more information head to the [documentation](https://gitlab.dlr.de/saiz_da/d
 - https://github.com/eminfedar/async-sockets-cpp
 - https://github.com/JustasBart/yolov8_CPP_Inference_OpenCV_ONNX
 - https://github.com/WongKinYiu/yolov7
+- https://github.com/UNeedCryDear/yolov7-opencv-dnn-cpp
