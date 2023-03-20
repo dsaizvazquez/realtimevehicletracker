@@ -43,8 +43,6 @@ then
     # run datetime script
     tmux send-keys -t 1 "sleep 2 && ./build/bin/main -f ../otherconfigs/config1.yaml" C-m
     tmux send-keys -t 2 "sleep 2 && ./build/bin/main -f ../otherconfigs/config2.yaml" C-m
-
-    tmux attach-session -t ses-0
 fi
 
 # Attach Session, on the Main window

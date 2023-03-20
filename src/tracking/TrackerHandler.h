@@ -31,19 +31,23 @@ class TrackerHandler{
     float aspectRatio=1;
     float offsetX=0;
     float offsetY=0;
+    float sensor_width=1;
+    float frame_width = 1;
 
     
 
     double GetIOU(cv::Rect bb_test, cv::Rect bb_gt);
 
     public:
-        TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatio, float offsetX, float offsetY);
+        TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatio, float offsetX, float offsetY, float sensor_width);
         void init(std::vector<Detection> detections);
         void predict();
         void match();
         std::vector<Target> correct(); //DELETE RETURN
 
         void updateParams(SharedData data); 
+
+        void setFrameWidth(float width);
         
         void projectToPlane();
         void estimateSpeed(float deltaTime); 

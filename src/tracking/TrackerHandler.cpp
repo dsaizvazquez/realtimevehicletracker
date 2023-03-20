@@ -1,9 +1,10 @@
 #include "TrackerHandler.h"
 
-TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatiop, float offsetXp, float offsetYp){
+TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatiop, float offsetXp, float offsetYp, float sensor_widthp){
 
 	iouThreshold = iouT;
     maxAge = age;
+	sensor_width = sensor_widthp;
 
 	aspectRatio =aspectRatiop;
 	offsetX=offsetXp;
@@ -139,7 +140,6 @@ std::vector<Target>  TrackerHandler::correct(){
 
     int detIdx, trkIdx;
 
-    targets.clear();
 	spdlog::debug("targets cleared");
 
     for (unsigned int i = 0; i < matchedPairs.size(); i++)
@@ -153,8 +153,6 @@ std::vector<Target>  TrackerHandler::correct(){
         trackers[trkIdx].class_id=detections[detIdx].class_id;
         trackers[trkIdx].confidence=detections[detIdx].confidence;
 		spdlog::debug("targets filled");
-
-        targets.push_back(trackers[trkIdx].getTarget());
     }
 
     for (auto umd : unmatchedDetections)
@@ -174,9 +172,13 @@ void TrackerHandler::updateParams(SharedData data){
 	cv::Vec3f theta(data.pitch,0,data.yaw); //TODO make realistic angle changes
 	params.R=projection::rotationMatrixFromAngles(theta);
 
-	params.K.at<double>(0,0)=data.focalLength;
-	params.K.at<double>(0,0)=data.focalLength*aspectRatio;
+	params.K.at<double>(0,0)=data.focalLength*frame_width/sensor_width;
+	params.K.at<double>(1,1)=data.focalLength*frame_width/sensor_width*aspectRatio;
 
+}
+
+void TrackerHandler::setFrameWidth(float width){
+	frame_width = width;
 }
 
 
@@ -202,7 +204,7 @@ std::vector<Target> TrackerHandler::getTargets(){
 
     for (unsigned int i = 0; i < trackers.size(); i++)
     {
-		if(targets[i].confidence<0.20) continue;
+		if(trackers[i].confidence<0.20) continue;
         targets.push_back(trackers[i].getTarget());
     }
 	return targets;

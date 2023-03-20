@@ -2,8 +2,9 @@
 
 cv::Point3d projection::projectPointToFlatPlane(cv::Mat K, cv::Mat R, float H, cv::Mat homPos){
         cv::Mat M =  R.inv()*K.inv()*homPos;
-        float test = homPos.at<float>(2,0);
         float s = (H)/M.at<float>(2,0);
+        
+
 
         cv::Mat res =M*s;
         cv::Point3d p (res.at<float>(0,0), res.at<float>(1,0), res.at<float>(2,0)-H);

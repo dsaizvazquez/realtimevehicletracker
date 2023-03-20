@@ -28,7 +28,7 @@ class UDPConn
 {
 private:
     UDPServer server;
-    Packet packet;
+    Packet packet{0,0,0,6,50,0};
     std::mutex mtx;
 public:
     Packet getPacket();

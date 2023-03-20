@@ -32,6 +32,7 @@ int KalmanTracker::init(cv::Rect initalState,int idNum)
 	kf.statePost.at<float>(1, 0) = initalState.y + initalState.height / 2;
 	kf.statePost.at<float>(2, 0) = initalState.area();
 	kf.statePost.at<float>(3, 0) = initalState.width / initalState.height;
+	speedVector.push_back(cv::Point3d(0,0,0));
 
     return 0;
 }
@@ -100,7 +101,8 @@ cv::Rect KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)
 
 Target KalmanTracker::getTarget(){
 	res.box = box;
-	res.speed = speedPx;
+	cv::Point3d instantSpeed =speedVector[speedVector.size()-1];
+	res.speed = sqrt(instantSpeed.x*instantSpeed.x+instantSpeed.y*instantSpeed.y);
     res.id = id;
 	res.confidence=confidence;
     res.class_id=class_id;
@@ -108,7 +110,6 @@ Target KalmanTracker::getTarget(){
 }
 
 void KalmanTracker::project(ProjectionParams params){
-		cv::Mat img = (cv::Mat_<int>(3,3) << 1, 0, 1, 0, -2, 0, 3, 0, 3);
 		cv::Mat position = (cv::Mat_<float>(3,1) << posPx.x, posPx.y, 1);
 		posVector.push_back(projection::projectPointToFlatPlane(params.K,params.R,params.H,position));
 } 
@@ -118,4 +119,5 @@ void KalmanTracker::estimateSpeed(float deltaTime){
 	int length = posVector.size();
 	cv::Point3d instantSpeed = (posVector[length-1]-posVector[length-2])/deltaTime;
 	speedVector.push_back(instantSpeed);
+
 }

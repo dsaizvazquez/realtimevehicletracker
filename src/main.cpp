@@ -42,7 +42,7 @@ std::string createJSON(int status, std::string input, std::vector<Target> target
         Json::Value colorArray;
         for(int i=0;i<3;i++) colorArray.append(color[i]);
         targetVal["color"] = colorArray;
-        targetVal["speed"] = target.speed.x;
+        targetVal["speed"] = target.speed;
         array.append(targetVal);
     }
     root["targets"] = array; 
@@ -160,7 +160,7 @@ int main(int argc, char * argv[]){
 
 
     //Create tracker
-    TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>(),config["IP"].as<std::string>(),config["port"].as<int>(),config["focalLength"].as<float>(),config["aspectRatio"].as<float>(),config["offsetX"].as<float>(),config["offsetY"].as<float>());
+    TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>(),config["IP"].as<std::string>(),config["port"].as<int>(),config["focalLength"].as<float>(),config["aspectRatio"].as<float>(),config["offsetX"].as<float>(),config["offsetY"].as<float>(),config["sensorWidth"].as<float>());
     std::vector<Target> targets;
 
     int skippedFrames =config["skippedFrames"].as<int>();
@@ -192,6 +192,7 @@ int main(int argc, char * argv[]){
             cv::Mat frame;
             int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
             int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+            tracker.setFrameWidth(frame_width);
             double fps = cap.get(cv::CAP_PROP_FPS)/skippedFrames;
             spdlog::info(fps);
             
@@ -230,7 +231,7 @@ int main(int argc, char * argv[]){
                 //Step 3: Project Speed
                 tracker.projectToPlane();
                 double frameTime =cap.get(cv::CAP_PROP_POS_MSEC)-oldVal;
-                tracker.estimateSpeed(frameTime);
+                tracker.estimateSpeed(frameTime/1000);
                 targets = tracker.getTargets();
 
                 //Step 4: Drawing
@@ -246,7 +247,7 @@ int main(int argc, char * argv[]){
                     cv::rectangle(frame, cv::Point(left, top), cv::Point(left + width, top + height), color, 3*THICKNESS);
                     //spdlog::info("speeds: {} {} px/frame {} {} px/s",targets[i].speed.x, targets[i].speed.y,targets[i].speed.x*fps,targets[i].speed.y*fps);
                     std::string label = cv::format("%d,%.2f",targets[i].id, targets[i].confidence);
-                    std::string labelBottom = cv::format("%.2f,%.2f",targets[i].speed.x*fps,targets[i].speed.y*fps);
+                    std::string labelBottom = cv::format("%.2f",targets[i].speed);
                     label = class_list[targets[i].class_id] + ":" + label;
                     // Draw class labels.
                     draw::draw_label(frame, label, left, top,color);
