@@ -21,6 +21,9 @@ typedef struct ProjectionParams
 	cv::Mat K;
     cv::Mat R;
     float H=10;
+    float frame_width;
+    float frame_height;
+
 }ProjectionParams;
 
 
@@ -36,6 +39,7 @@ class KalmanTracker{
 
     std::vector<cv::Point3d> posVector;
     std::vector<cv::Point3d> speedVector;
+    float speedAveragingFactor =0.7;
 
     Target res;
 
@@ -43,7 +47,7 @@ class KalmanTracker{
 
 
     public:
-        int init(cv::Rect initialState,int id);
+        int init(cv::Rect initialState,int id, float speedAveragingFactorp);
         cv::Rect predict();
         int correct(cv::Rect state);
 

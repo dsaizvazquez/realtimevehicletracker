@@ -1,6 +1,6 @@
 #include "TrackerHandler.h"
 
-TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatiop, float offsetXp, float offsetYp, float sensor_widthp){
+TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatiop, float offsetXp, float offsetYp, float sensor_widthp, float speedAvgF){
 
 	iouThreshold = iouT;
     maxAge = age;
@@ -9,11 +9,12 @@ TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint
 	aspectRatio =aspectRatiop;
 	offsetX=offsetXp;
 	offsetY=offsetYp;
+	speedAvgFactor=speedAvgF;
 	params.K = (cv::Mat_<float>(3,3) <<
-                focalLengthp,       0,                         offsetX,
-                0,                 focalLengthp*aspectRatio,   offsetY,
+                focalLengthp,       0,                         offsetXp,
+                0,                 focalLengthp*aspectRatiop,   offsetYp,
                 0,                  0,                         1 );
-
+	std::cout<<params.K<<std::endl;
 	
 	
 	connection.init(IPv4,port);
@@ -31,7 +32,7 @@ void TrackerHandler::init(std::vector<Detection> newDetections){
                 {
 					if(detections[i].box.height==0) continue;
                     KalmanTracker trk;
-                    trk.init(detections[i].box,idCounter);
+                    trk.init(detections[i].box,idCounter, speedAvgFactor);
 					idCounter++;
                     trackers.push_back(trk);
                 }
@@ -158,7 +159,7 @@ std::vector<Target>  TrackerHandler::correct(){
     for (auto umd : unmatchedDetections)
     {
         KalmanTracker tracker;
-        tracker.init(detections[umd].box,idCounter);
+        tracker.init(detections[umd].box,idCounter, speedAvgFactor);
 		idCounter++;
         trackers.push_back(tracker);
     }
@@ -169,16 +170,18 @@ void TrackerHandler::updateParams(SharedData data){
 
 	params.H=data.altitude;
 
-	cv::Vec3f theta(data.pitch,0,data.yaw); //TODO make realistic angle changes
+	cv::Vec3f theta(data.pitch-M_PI/2,0,data.yaw); //TODO make realistic angle changes
 	params.R=projection::rotationMatrixFromAngles(theta);
-
-	params.K.at<double>(0,0)=data.focalLength*frame_width/sensor_width;
-	params.K.at<double>(1,1)=data.focalLength*frame_width/sensor_width*aspectRatio;
+	params.K.at<float>(0,0)=data.focalLength*frame_width/sensor_width;
+	params.K.at<float>(1,1)=data.focalLength*frame_width/sensor_width*aspectRatio;
+	
 
 }
 
-void TrackerHandler::setFrameWidth(float width){
+void TrackerHandler::setProjectionParams(float width, float height){
 	frame_width = width;
+	params.frame_width = width;
+	params.frame_height = height;
 }
 
 

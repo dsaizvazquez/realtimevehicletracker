@@ -34,12 +34,13 @@ class TrackerHandler{
     float sensor_width=1;
     float frame_width = 1;
 
+    float speedAvgFactor=0.7;
     
 
     double GetIOU(cv::Rect bb_test, cv::Rect bb_gt);
 
     public:
-        TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatio, float offsetX, float offsetY, float sensor_width);
+        TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatio, float offsetX, float offsetY, float sensor_width, float speedAvgFactor);
         void init(std::vector<Detection> detections);
         void predict();
         void match();
@@ -47,7 +48,7 @@ class TrackerHandler{
 
         void updateParams(SharedData data); 
 
-        void setFrameWidth(float width);
+        void setProjectionParams(float width, float height);
         
         void projectToPlane();
         void estimateSpeed(float deltaTime); 
