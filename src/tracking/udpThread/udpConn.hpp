@@ -6,6 +6,12 @@
 #include <cstring>
 #include "udpserver.hpp"
 
+typedef struct UdpConnConfiguration
+{
+	std::string IPv4 = "127.0.0.1";
+    std::uint16_t port = 8888;
+    
+}UdpConnConfiguration;
 
 typedef struct SharedData 
 {
@@ -33,6 +39,8 @@ private:
 public:
     Packet getPacket();
     void init(std::string IPv4, std::uint16_t port);
+    void init(UdpConnConfiguration *config);
+
     void close(){
         server.Close();
     };

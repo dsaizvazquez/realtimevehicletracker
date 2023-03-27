@@ -16,15 +16,7 @@ typedef struct Target
     int id;
 }Target;
 
-typedef struct ProjectionParams
-{
-	cv::Mat K;
-    cv::Mat R;
-    float H=10;
-    float frame_width;
-    float frame_height;
 
-}ProjectionParams;
 
 
 //TODO: Unfinished, basic structure in process
@@ -56,7 +48,7 @@ class KalmanTracker{
         cv::Point2d getPosInPx();
 
 
-        void project(ProjectionParams params); 
+        void project(cv::Mat K, cv::Mat R, float H,float frame_width, float frame_height); 
         void estimateSpeed(float deltaTime);
 
         Target getTarget();

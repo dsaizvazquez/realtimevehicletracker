@@ -110,9 +110,9 @@ Target KalmanTracker::getTarget(){
 	return res;
 }
 
-void KalmanTracker::project(ProjectionParams params){
-		cv::Mat position = (cv::Mat_<float>(3,1) << posPx.x-params.frame_width/2, posPx.y-params.frame_height/2, 1);
-		posVector.push_back(projection::projectPointToFlatPlane(params.K,params.R,params.H,position));
+void KalmanTracker::project(cv::Mat K, cv::Mat R, float H,float frame_width, float frame_height){
+		cv::Mat position = (cv::Mat_<float>(3,1) << posPx.x-frame_width/2, posPx.y-frame_height/2, 1);
+		posVector.push_back(projection::projectPointToFlatPlane(K,R,H,position));
 } 
 
 

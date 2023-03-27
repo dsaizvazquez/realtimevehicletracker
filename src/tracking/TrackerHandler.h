@@ -3,11 +3,17 @@
 #include "hungarian/Hungarian.h"
 #include "udpThread/udpConn.hpp"
 
+typedef struct TrackerConfiguration
+{
+	double iouThreshold = 0.3;
+    int maxAge = 3;
+    float speedAvgFactor=0.7;
+    
+}TrackerConfiguration;
+
 
 class TrackerHandler{
 
-    double iouThreshold = 0.3;
-    int maxAge = 3;
     int idCounter=0;
     
     std::vector<KalmanTracker> trackers;
@@ -25,23 +31,26 @@ class TrackerHandler{
     std::vector<Target> targets;
     std::vector<Detection> detections;
 
+    TrackerConfiguration *config;
+    UdpConnConfiguration *udpConfig;
+    ProjectionConfiguration *projectionConfig;
+
     UDPConn connection;
-    ProjectionParams params;
 
-    float aspectRatio=1;
-    float offsetX=0;
-    float offsetY=0;
-    float sensor_width=1;
-    float frame_width = 1;
+    cv::Mat K;
+    cv::Mat R;
+    float H=10;
 
-    float speedAvgFactor=0.7;
     
 
     double GetIOU(cv::Rect bb_test, cv::Rect bb_gt);
 
     public:
         TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatio, float offsetX, float offsetY, float sensor_width, float speedAvgFactor);
+        TrackerHandler(TrackerConfiguration *config, ProjectionConfiguration *projectionConfig, UdpConnConfiguration *udpConfig);
+
         void init(std::vector<Detection> detections);
+        
         void predict();
         void match();
         std::vector<Target> correct(); //DELETE RETURN

@@ -17,16 +17,29 @@ typedef struct Detection
   int class_id;
 }Detection;
 
+typedef struct DetectionConfiguration
+{
+    float InputWidth = 640.0;
+    float InputHeight = 640.0;
+    float ScoreThreshold = 0.5;
+    float NmsThreshold = 0.45;
+    float ConfidenceThreshold = 0.45;
+    int yolov = 5;
+
+}DetectionConfiguration;
+
 
 class Detector {
 
     
     cv::dnn::Net &net;
     const std::vector<std::string> &class_name;
+
+    DetectionConfiguration * config;
     
     std::vector<cv::Mat> outputs;
     std::vector<Detection> detections;
-    int yolov =5;
+    
 
     //yolov7 parsing variables
     const int strideSize = 3;   //stride size
@@ -38,15 +51,10 @@ class Detector {
     }
 
   public:
-    float INPUT_WIDTH = 640.0;
-    float INPUT_HEIGHT = 640.0;
-    float SCORE_THRESHOLD = 0.5;
-    float NMS_THRESHOLD = 0.45;
-    float CONFIDENCE_THRESHOLD = 0.45;
     int_fast8_t forward(cv::Mat &input_image);
     int_fast8_t process(float x_factor,float y_factor);
     std::vector<Detection> detect(cv::Mat &input_image);
-    Detector(cv::dnn::Net &neti, const std::vector<std::string> &class_namei, int yolo) :net(neti), class_name(class_namei), yolov(yolo){};
+    Detector(cv::dnn::Net &neti, const std::vector<std::string> &class_namei, DetectionConfiguration * config) :net(neti), class_name(class_namei), config(config){};
 
 };
 

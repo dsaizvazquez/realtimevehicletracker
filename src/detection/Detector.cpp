@@ -6,7 +6,7 @@ int_fast8_t Detector::forward(cv::Mat &input_image)
 {
     // Convert to blob.
     cv::Mat blob;
-    cv::dnn::blobFromImage(input_image, blob, 1./255., cv::Size(INPUT_WIDTH, INPUT_HEIGHT), cv::Scalar(), true, false);
+    cv::dnn::blobFromImage(input_image, blob, 1./255., cv::Size(config->InputWidth, config->InputHeight), cv::Scalar(), true, false);
  
     net.setInput(blob);
  
@@ -28,7 +28,7 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
     int rows = outputs[0].size[1];
     int dimensions = outputs[0].size[2];
 
-    if(yolov==YOLOV8){
+    if(config->yolov==YOLOV8){
         // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
         rows = outputs[0].size[2];
         dimensions = outputs[0].size[1];
@@ -45,7 +45,7 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
 
             cv::minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
 
-            if (maxClassScore > CONFIDENCE_THRESHOLD)
+            if (maxClassScore > config->ConfidenceThreshold)
             {
                 confidences.push_back(maxClassScore);
                 class_ids.push_back(class_id.x);
@@ -66,14 +66,14 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
 
             }
         }
-    }else if(yolov==YOLOV5){
+    }else if(config->yolov==YOLOV5){
         // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
         float *data = (float *)outputs[0].data;
         for (int i = 0; i < rows; ++i)
         {
             float confidence = data[4];
 
-            if (confidence >= CONFIDENCE_THRESHOLD)
+            if (confidence >= config->ConfidenceThreshold)
             {
                 float *classes_scores = data+5;
 
@@ -83,7 +83,7 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
 
                 cv::minMaxLoc(scores, 0, &max_class_score, 0, &class_id);
 
-                if (max_class_score > SCORE_THRESHOLD)
+                if (max_class_score > config->ScoreThreshold)
                 {
                     confidences.push_back(confidence);
                     class_ids.push_back(class_id.x);
@@ -105,27 +105,27 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
                 }
             }
         }
-    }else if(yolov==YOLOV7){
+    }else if(config->yolov==YOLOV7){
         std::sort(outputs.begin(), outputs.end(), [](cv::Mat &A, cv::Mat &B) {return A.size[2] > B.size[2]; });
         float* pdata = (float*)outputs[0].data;
         int net_width = class_name.size() + 5;
         for (int stride = 0; stride < strideSize; stride++) {    //stride
 		float* pdata = (float*)outputs[stride].data;
-		int grid_x = (int)(INPUT_WIDTH / netStride[stride]);
-		int grid_y = (int)(INPUT_HEIGHT / netStride[stride]);
+		int grid_x = (int)(config->InputWidth / netStride[stride]);
+		int grid_y = (int)(config->InputHeight / netStride[stride]);
 		for (int anchor = 0; anchor < 3; anchor++) {	//anchors
 			const float anchor_w = netAnchors[stride][anchor * 2];
 			const float anchor_h = netAnchors[stride][anchor * 2 + 1];
 			for (int i = 0; i < grid_y; i++) {
 				for (int j = 0; j < grid_x; j++) {
 					float box_score = sigmoid_x(pdata[4]); ;
-					if (box_score >= CONFIDENCE_THRESHOLD) {
+					if (box_score >= config->ConfidenceThreshold) {
 						cv::Mat scores(1, class_name.size(), CV_32FC1, pdata + 5);
 						cv::Point classIdPoint;
 						double max_class_socre;
 						minMaxLoc(scores, 0, &max_class_socre, 0, &classIdPoint);
 						max_class_socre = sigmoid_x(max_class_socre);
-						if (max_class_socre >= SCORE_THRESHOLD) {
+						if (max_class_socre >= config->ScoreThreshold) {
 							float x = (sigmoid_x(pdata[0]) * 2.f - 0.5f + j) * netStride[stride];  //x
 							float y = (sigmoid_x(pdata[1]) * 2.f - 0.5f + i) * netStride[stride];   //y
 							float w = powf(sigmoid_x(pdata[2]) * 2.f, 2.f) * anchor_w;   //w
@@ -147,7 +147,7 @@ int_fast8_t Detector::process(float x_factor, float y_factor)
     // Perform Non-Maximum Suppression and draw predictions.
     std::vector<int> indices;
     
-    cv::dnn::NMSBoxes(boxes, confidences, SCORE_THRESHOLD, NMS_THRESHOLD, indices);
+    cv::dnn::NMSBoxes(boxes, confidences, config->ScoreThreshold, config->NmsThreshold, indices);
     for (int i = 0; i < indices.size(); i++)
     {
         int idx = indices[i];
@@ -167,8 +167,8 @@ std::vector<Detection> Detector::detect(cv::Mat &input_image){
     detections.clear();
     this->forward(input_image);
     
-    float x_factor = input_image.cols / INPUT_WIDTH;
-    float y_factor = input_image.rows / INPUT_HEIGHT;
+    float x_factor = input_image.cols / config->InputWidth;
+    float y_factor = input_image.rows / config->InputHeight;
     this->process(x_factor,y_factor);
     return detections;
 }

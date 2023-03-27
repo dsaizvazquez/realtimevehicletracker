@@ -21,6 +21,213 @@ namespace STATUS{
     status NORMAL = 2;
 }
 
+typedef struct Configuration
+{
+    DetectionConfiguration detection;
+    TrackerConfiguration tracker;
+    UdpConnConfiguration udpConn;
+    ProjectionConfiguration projection;
+
+    std::string cocoFile ="models/coco.names";
+    std::string nnetFile="models/yolov5s.onnx";
+    int tcpPort =12520;
+    int updateRate=5;
+    int skippedFrames = 1;
+    float errorDelay=5;
+
+    std::string input="rtsp://localhost:8554/in";
+
+    std::string output="appsrc ! videoconvert ! x264enc speed-preset=ultrafast bitrate=1800  key-int-max=40 ! rtspclientsink location=rtspt://localhost:8554/out";
+    char outputType ='s';
+    int fps =15;
+
+}Configuration;
+
+
+void setConfig(Configuration *config, YAML::Node configYAML){
+
+    spdlog::info("======================CONFIGURATION======================");
+    //basic configurations
+    spdlog::info("Basic Configuration**************************************");
+
+    if(configYAML["input"]){
+        config->input=configYAML["input"].as<std::string>();  
+    }
+    spdlog::info("input: {}", config->input);
+
+    if(configYAML["output"]){
+        config->output=configYAML["output"].as<std::string>();
+    }
+    spdlog::info("output: {}", config->output);
+
+    if(configYAML["outputType"]){
+        config->outputType=configYAML["outputType"].as<char>();
+    }
+    spdlog::info("outputType: {}", config->outputType);
+
+    if(configYAML["fps"]){
+        config->fps=configYAML["fps"].as<int>();
+    }
+    spdlog::info("fps: {}", config->fps);
+
+    if(configYAML["cocoFile"]){
+        config->cocoFile=configYAML["cocoFile"].as<std::string>();
+    }
+    spdlog::info("cocoFile: {}", config->cocoFile);
+
+    if(configYAML["nnetFile"]){
+        config->nnetFile=configYAML["nnetFile"].as<std::string>();
+        
+    }
+    spdlog::info("nnetFile: {}", config->nnetFile);
+    
+    if(configYAML["tcpPort"]){
+        config->tcpPort=configYAML["tcpPort"].as<int>();
+        
+    }
+    spdlog::info("tcpPort: {}", config->tcpPort);
+    
+    
+    spdlog::info("Secondary Configuration**********************************");
+
+    if(configYAML["updateRate"]){
+        config->updateRate=configYAML["updateRate"].as<int>();
+        
+    }
+    spdlog::info("updateRate: {}", config->updateRate);
+
+    if(configYAML["skippedFrames"]){
+        config->skippedFrames=configYAML["skippedFrames"].as<int>();
+    }
+    spdlog::info("skippedFrames: {}", config->skippedFrames);
+
+
+    if(configYAML["errorDelay"]){
+        config->errorDelay=configYAML["errorDelay"].as<int>();
+        
+    }
+    spdlog::info("errorDelay: {}", config->errorDelay);
+
+    
+    spdlog::info("Tracker Handler Configuration****************************");
+
+    if(configYAML["iouThreshold"]){
+        config->tracker.iouThreshold=configYAML["iouThreshold"].as<double>();
+        
+    }
+    spdlog::info("iouThreshold: {}", config->tracker.iouThreshold);
+
+     if(configYAML["iouThreshold"]){
+        config->tracker.iouThreshold=configYAML["iouThreshold"].as<double>();
+        
+    }
+    spdlog::info("iouThreshold: {}", config->tracker.iouThreshold);
+
+    if(configYAML["maxAge"]){
+        config->tracker.maxAge=configYAML["maxAge"].as<int>();
+        
+    }
+    spdlog::info("maxAge: {}", config->tracker.maxAge);
+
+    if(configYAML["speedAverageFactor"]){
+        config->tracker.speedAvgFactor=configYAML["speedAverageFactor"].as<float>();
+        
+    }
+    spdlog::info("speedAverageFactor: {}", config->tracker.speedAvgFactor);
+
+
+    spdlog::info("UDP Conn Configuration***********************************");
+    if(configYAML["IP"]){
+        config->udpConn.IPv4=configYAML["IP"].as<std::string>();
+        
+    }
+    spdlog::info("IPv4: {}", config->udpConn.IPv4);
+
+    if(configYAML["port"]){
+        config->udpConn.port=configYAML["port"].as<int>();
+        
+    }
+    spdlog::info("port: {}", config->udpConn.port);
+
+    spdlog::info("Projection Configuration*********************************");
+
+    if(configYAML["focalLength"]){
+        config->projection.focalLength=configYAML["focalLength"].as<float>();
+        
+    }
+    spdlog::info("focalLength: {}", config->projection.focalLength);
+
+    if(configYAML["aspectRatio"]){
+        config->projection.aspectRatio=configYAML["aspectRatio"].as<float>();
+        
+    }
+    spdlog::info("aspectRatio: {}", config->projection.aspectRatio);
+
+    if(configYAML["offsetX"]){
+        config->projection.offsetX=configYAML["offsetX"].as<float>();
+        
+    }
+    spdlog::info("offsetX: {}", config->projection.offsetX);
+
+    if(configYAML["offsetY"]){
+        config->projection.offsetY=configYAML["offsetY"].as<float>();
+        
+    }
+    spdlog::info("sensorWidth: {}", config->projection.sensor_width);
+
+    if(configYAML["sensorWidth"]){
+        config->projection.sensor_width=configYAML["sensorWidth"].as<float>();
+        
+    }
+    spdlog::info("focalLength: {}", config->projection.focalLength);
+
+    spdlog::info("Detection Configuration**********************************");
+
+    if(configYAML["InputWidth"]){
+        config->detection.InputWidth=configYAML["InputWidth"].as<float>();
+        
+    }
+    spdlog::info("InputWidth: {}", config->detection.InputWidth);
+
+
+    if(configYAML["InputHeight"]){
+        config->detection.InputHeight=configYAML["InputHeight"].as<float>();
+        
+    }
+    spdlog::info("InputHeight: {}", config->detection.InputHeight);
+
+    if(configYAML["ScoreThreshold"]){
+        config->detection.ScoreThreshold=configYAML["ScoreThreshold"].as<float>();
+        
+    }
+    spdlog::info("ScoreThreshold: {}", config->detection.ScoreThreshold);
+
+    if(configYAML["NmsThreshold"]){
+        config->detection.NmsThreshold=configYAML["NmsThreshold"].as<float>();
+        
+    }
+    spdlog::info("NmsThreshold: {}", config->detection.NmsThreshold);
+
+    if(configYAML["ConfidenceThreshold"]){
+        config->detection.ConfidenceThreshold=configYAML["ConfidenceThreshold"].as<float>();
+        
+    }
+    spdlog::info("ConfidenceThreshold: {}", config->detection.ConfidenceThreshold);
+
+    if(configYAML["YOLOv"]){
+        config->detection.yolov=configYAML["YOLOv"].as<int>();
+        
+    }
+    spdlog::info("yolov: {}", config->detection.yolov);
+
+
+
+
+
+
+}
+
+
 const int colorNum = 20;
 cv::Scalar randColor[colorNum];
 
@@ -79,14 +286,15 @@ int main(int argc, char * argv[]){
     }
 
     // Load configuration
-    YAML::Node config = YAML::LoadFile(configFile);
+    YAML::Node configYAML = YAML::LoadFile(configFile);
+    Configuration config;
+    
+    setConfig(&config,configYAML);
 
 
     //configure logger
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     console_sink->set_level(spdlog::level::info);
-    console_sink->set_pattern("[%H:%M:%S %z] [%^---%L---%$] %v");
-
     auto file_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>("logs/log.txt", 2, 30);
     file_sink->set_level(spdlog::level::trace);
 
@@ -105,7 +313,7 @@ int main(int argc, char * argv[]){
 
     // Load class list.
     std::vector<std::string> class_list;
-    std::ifstream ifs(config["cocoFile"].as<std::string>());
+    std::ifstream ifs(config.cocoFile);
     std::string line;
     while (std::getline(ifs, line))
     {
@@ -114,7 +322,7 @@ int main(int argc, char * argv[]){
 
     // Load model.
     cv::dnn::Net net;
-    net = cv::dnn::readNet(config["nnetFile"].as<std::string>());
+    net = cv::dnn::readNet(config.nnetFile);
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
 	net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
     spdlog::info("NN loaded");
@@ -138,7 +346,7 @@ int main(int argc, char * argv[]){
     };
 
     // Bind the server to a port.
-    tcpServer.Bind(config["tcpPort"].as<int>(), [](int errorCode, string errorMessage) {
+    tcpServer.Bind(config.tcpPort, [](int errorCode, string errorMessage) {
         // BINDING FAILED:
         spdlog::info("error binding: {}{}",errorCode, errorMessage);
     });
@@ -150,23 +358,18 @@ int main(int argc, char * argv[]){
 
     //started update counter
     int updateCount=0;
-    int updateRate = config["updateRate"].as<int>();
 
 
     // Create detector
-    Detector detector(net,class_list,config["YOLOv"].as<int>() );
-    detector.INPUT_HEIGHT=config["INPUT_HEIGHT"].as<float>();
-    detector.INPUT_WIDTH=config["INPUT_WIDTH"].as<float>();
+    Detector detector(net,class_list,&config.detection);
 
 
     //Create tracker
-    TrackerHandler tracker(config["iouThreshold"].as<double>(),config["maxAge"].as<int>(),config["IP"].as<std::string>(),config["port"].as<int>(),config["focalLength"].as<float>(),config["aspectRatio"].as<float>(),config["offsetX"].as<float>(),config["offsetY"].as<float>(),config["sensorWidth"].as<float>(),config["speedAverageFactor"].as<float>());
+    TrackerHandler tracker(&config.tracker,&config.projection, &config.udpConn);
     std::vector<Target> targets;
 
-    int skippedFrames =config["skippedFrames"].as<int>();
     
     spdlog::info("Tracker and Detector initialized");
-    float delay = config["errorDelay"].as<float>();
 
     //display colors create
     cv::RNG rng(0xFFFFFFFF);
@@ -176,32 +379,31 @@ int main(int argc, char * argv[]){
     // Load video.
     cv::VideoCapture cap;
     cv::VideoWriter video;
-    std::string input =config["input"].as<std::string>();
 
     while(true){
-        cap.open(input);
+        cap.open(config.input);
         if(!cap.isOpened()){
             status = STATUS::ERROR_INPUT;
-            spdlog::warn("Input is not ready, trying again in {} secs",delay);
+            spdlog::warn("Input is not ready, trying again in {} secs",config.errorDelay);
             sendClients(clientList, "{\"status\":"+std::to_string(status)+"}");
-            usleep(delay*1000000);
+            usleep(config.errorDelay*1000000);
             continue;
         }else{
             status = STATUS::NORMAL;
-            spdlog::info("Input {} is ready",input);
             cv::Mat frame;
             int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
             int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
             tracker.setProjectionParams(frame_width, frame_height);
-            double fps = cap.get(cv::CAP_PROP_FPS)/skippedFrames;
-            spdlog::info(fps);
+            double fps = cap.get(cv::CAP_PROP_FPS)/config.skippedFrames;
+            spdlog::info("Input {} is ready with framerate {}",config.input,fps);
+
             
 
-            if(config["outputType"].as<char>()=='v'){
+            if(config.outputType=='v'){
                 spdlog::info("is a video");
-                video.open(config["output"].as<std::string>(), cv::VideoWriter::fourcc('M','J','P','G'), 30, cv::Size(frame_width,frame_height));
+                video.open(config.output, cv::VideoWriter::fourcc('M','J','P','G'), 30, cv::Size(frame_width,frame_height));
             }else{
-                video.open(config["output"].as<std::string>(),cv::CAP_GSTREAMER, 0,config["fps"].as<int>(), cv::Size (frame_width, frame_height), true);
+                video.open(config.output,cv::CAP_GSTREAMER, 0,config.fps, cv::Size (frame_width, frame_height), true);
             }
             double oldVal =0;
             cap >> frame;
@@ -268,14 +470,14 @@ int main(int argc, char * argv[]){
 
                 video.write(frame);
                 cap >> frame;
-                if(updateCount>updateRate){
-                    std::string pkg = createJSON(status, input, targets,class_list,wbuilder);
+                if(updateCount>config.updateRate){
+                    std::string pkg = createJSON(status, config.input, targets,class_list,wbuilder);
                     sendClients(clientList, pkg);
                     updateCount=0;
                 }
                 updateCount++;
                 
-                for(int i = 0; i< skippedFrames; i++)  cap >> frame;
+                for(int i = 0; i< config.skippedFrames; i++)  cap >> frame;
             }
         }
     

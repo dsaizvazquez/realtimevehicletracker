@@ -2,26 +2,40 @@
 
 TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatiop, float offsetXp, float offsetYp, float sensor_widthp, float speedAvgF){
 
-	iouThreshold = iouT;
-    maxAge = age;
-	sensor_width = sensor_widthp;
+	config->iouThreshold = iouT;
+    config->maxAge = age;
+	config->speedAvgFactor=speedAvgF;
 
-	aspectRatio =aspectRatiop;
-	offsetX=offsetXp;
-	offsetY=offsetYp;
-	speedAvgFactor=speedAvgF;
-	params.K = (cv::Mat_<float>(3,3) <<
-                focalLengthp,       0,                         offsetXp,
-                0,                 focalLengthp*aspectRatiop,   offsetYp,
-                0,                  0,                         1 );
-	std::cout<<params.K<<std::endl;
+	projectionConfig->offsetY=focalLengthp;
+	projectionConfig->sensor_width = sensor_widthp;
+	projectionConfig->aspectRatio =aspectRatiop;
+	projectionConfig->offsetX=offsetXp;
+	projectionConfig->offsetY=offsetYp;
+
+	K = (cv::Mat_<float>(3,3) <<
+                projectionConfig->focalLength,       0,                         			                         projectionConfig->offsetX,
+                0,                 					projectionConfig->focalLength*projectionConfig->aspectRatio,   projectionConfig->offsetY,
+                0,                  				0,                         1 );
 	
 	
 	connection.init(IPv4,port);
-
-
-
 }
+
+TrackerHandler::TrackerHandler(TrackerConfiguration *config,ProjectionConfiguration *projectionConfig, UdpConnConfiguration *udpConfig){
+
+	this->config=config;
+
+	this->projectionConfig=projectionConfig;
+
+	K = (cv::Mat_<float>(3,3) <<
+                projectionConfig->focalLength,       0,                         			                         projectionConfig->offsetX,
+                0,                 					projectionConfig->focalLength*projectionConfig->aspectRatio,   projectionConfig->offsetY,
+                0,                  				0,                         1 );
+	
+	
+	connection.init(udpConfig);
+}
+
 
 
 void TrackerHandler::init(std::vector<Detection> newDetections){
@@ -32,7 +46,7 @@ void TrackerHandler::init(std::vector<Detection> newDetections){
                 {
 					if(detections[i].box.height==0) continue;
                     KalmanTracker trk;
-                    trk.init(detections[i].box,idCounter, speedAvgFactor);
+                    trk.init(detections[i].box,idCounter, config->speedAvgFactor);
 					idCounter++;
                     trackers.push_back(trk);
                 }
@@ -44,7 +58,7 @@ void TrackerHandler::predict(){
 
 		for (auto it = trackers.begin(); it != trackers.end();)
 		{
-            if (it != trackers.end() && (*it).age > maxAge){
+            if (it != trackers.end() && (*it).age > config->maxAge){
                  it = trackers.erase(it);
                  continue;
             }
@@ -114,7 +128,7 @@ void TrackerHandler::match(){
 		{
 			if (assignment[i] == -1) // pass over invalid values
 				continue;
-			if (1 - iouMatrix[i][assignment[i]] < iouThreshold)
+			if (1 - iouMatrix[i][assignment[i]] < config->iouThreshold)
 			{
 				unmatchedTrajectories.insert(i);
 				unmatchedDetections.insert(assignment[i]);
@@ -159,8 +173,9 @@ std::vector<Target>  TrackerHandler::correct(){
     for (auto umd : unmatchedDetections)
     {
         KalmanTracker tracker;
-        tracker.init(detections[umd].box,idCounter, speedAvgFactor);
+        tracker.init(detections[umd].box,idCounter, config->speedAvgFactor);
 		idCounter++;
+		if(idCounter>100)idCounter=0;
         trackers.push_back(tracker);
     }
 	return targets;
@@ -168,27 +183,28 @@ std::vector<Target>  TrackerHandler::correct(){
 }
 void TrackerHandler::updateParams(SharedData data){
 
-	params.H=data.altitude;
+	H=data.altitude;
 
 	cv::Vec3f theta(data.pitch-M_PI/2,0,data.yaw); //TODO make realistic angle changes
-	params.R=projection::rotationMatrixFromAngles(theta);
-	params.K.at<float>(0,0)=data.focalLength*frame_width/sensor_width;
-	params.K.at<float>(1,1)=data.focalLength*frame_width/sensor_width*aspectRatio;
+	R=projection::rotationMatrixFromAngles(theta);
+	K.at<float>(0,0)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width;
+	K.at<float>(1,1)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width*projectionConfig->aspectRatio;
 	
 
 }
 
 void TrackerHandler::setProjectionParams(float width, float height){
-	frame_width = width;
-	params.frame_width = width;
-	params.frame_height = height;
+	projectionConfig->frame_width = width;
+	projectionConfig->frame_width = height;
+
+	
 }
 
 
 void  TrackerHandler::projectToPlane(){
 	updateParams(connection.getPacket());
 	for(int i=0;i<trackers.size();i++){
-		trackers[i].project(params);
+		trackers[i].project(K, R, H, projectionConfig->frame_width, projectionConfig->frame_height);
 	}
  }; 
     
