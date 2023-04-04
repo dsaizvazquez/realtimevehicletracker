@@ -14,3 +14,8 @@ For more information head to the [documentation](https://gitlab.dlr.de/saiz_da/d
 - https://github.com/JustasBart/yolov8_CPP_Inference_OpenCV_ONNX
 - https://github.com/WongKinYiu/yolov7
 - https://github.com/UNeedCryDear/yolov7-opencv-dnn-cpp
+- https://img.ly/blog/ultimate-guide-to-ffmpeg/
+
+## MPEGTS TO RTMP WORKS WITH SERVER
+ffmpeg -i udp://127.0.0.1:13001 -vcodec libx264 -acodec aac -f flv rtmp://127.0.0.1:1935/in
+ffmpeg -re -stream_loop -1 -i video4.mp4 -f mpegts udp://127.0.0.1:13001
