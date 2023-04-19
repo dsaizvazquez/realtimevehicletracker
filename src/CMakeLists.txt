@@ -1,6 +1,9 @@
 
 
+
+
 include_directories("utils")
+include_directories(${JSON_INC_PATH})
 add_subdirectory("detection")
 add_subdirectory("tracking")
 add_subdirectory("udp")
