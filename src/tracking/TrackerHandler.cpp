@@ -94,8 +94,7 @@ void TrackerHandler::match(){
 		// the resulting assignment is [track(prediction) : detection], with len=preNum
 		HungarianAlgorithm HungAlgo;
 		assignment.clear();
-
-		HungAlgo.Solve(iouMatrix, assignment);
+		if(trkNum>0)HungAlgo.Solve(iouMatrix, assignment);
 
 		// find matches, unmatched_detections and unmatched_predictions
 		unmatchedTrajectories.clear();
