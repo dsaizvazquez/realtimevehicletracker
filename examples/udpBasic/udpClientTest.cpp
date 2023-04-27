@@ -7,7 +7,7 @@ int main()
 {
     // Our constants:
     const string IP = "localhost";
-    const uint16_t PORT = 8888;
+    const uint16_t PORT = 8998;
 
     // Initialize socket.
     UDPSocket udpSocket(true); // "true" to use Connection on UDP. Default is "false".

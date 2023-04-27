@@ -1,0 +1,5 @@
+pitch: -52.9,yaw: 15.8, altitude:548.7925, focal: 1.3375528, timestamp: 1681987497 FOR 38 seconds
+
+pitch: -31.6,yaw: -7.8, altitude:548.7488, focal: 7.042194, timestamp: 1681987779 FOR 1 min 6s
+
+pitch: -13.5,yaw: 108.8, altitude:548.817, focal: 11.565401, timestamp: 1681987937 FOR 11seconds

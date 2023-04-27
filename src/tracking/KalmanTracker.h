@@ -28,7 +28,7 @@ class KalmanTracker{
     cv::Point2d posPx;
     cv::Point2d speedPx;
     cv::Rect box;
-
+     std::vector<cv::Point2d> posPxs;
     std::vector<cv::Point3d> posVector;
     std::vector<cv::Point3d> speedVector;
     float speedAveragingFactor =0.7;

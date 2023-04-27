@@ -10,6 +10,7 @@ add_executable (tcpClientTest "udpBasic/tcpClientTest.cpp")
 
 add_executable (udpConnTestS "udpConn/udpConnTestS.cpp")
 add_executable (udpConnTestC "udpConn/udpConnTestC.cpp")
+add_executable (udpConnSim "udpConn/udpConnSimulator.cpp")
 
 add_executable (projectionTest "projection/projectionTest.cpp")
 
@@ -33,5 +34,6 @@ target_link_libraries(tcpClientTest udpLib)
 
 target_link_libraries(udpConnTestS trackingLib)
 target_link_libraries(udpConnTestC trackingLib)
+target_link_libraries(udpConnSim trackingLib)
 
 target_link_libraries(projectionTest projectionLib)
