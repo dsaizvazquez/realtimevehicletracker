@@ -94,8 +94,7 @@ void TrackerHandler::match(){
 		// the resulting assignment is [track(prediction) : detection], with len=preNum
 		HungarianAlgorithm HungAlgo;
 		assignment.clear();
-
-		HungAlgo.Solve(iouMatrix, assignment);
+		if(trkNum>0)HungAlgo.Solve(iouMatrix, assignment);
 
 		// find matches, unmatched_detections and unmatched_predictions
 		unmatchedTrajectories.clear();
@@ -184,8 +183,8 @@ std::vector<Target>  TrackerHandler::correct(){
 void TrackerHandler::updateParams(SharedData data){
 
 	H=data.altitude;
-
-	cv::Vec3f theta(data.pitch-M_PI/2,0,data.yaw); //TODO make realistic angle changes
+	float deg2rad_var = 0.017453292;
+	cv::Vec3f theta(data.pitch*deg2rad_var-M_PI/2,0,data.yaw*deg2rad_var); //TODO make realistic angle changes
 	R=projection::rotationMatrixFromAngles(theta);
 	K.at<float>(0,0)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width;
 	K.at<float>(1,1)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width*projectionConfig->aspectRatio;

@@ -13,22 +13,28 @@ typedef struct UdpConnConfiguration
     
 }UdpConnConfiguration;
 
+
+
+#pragma pack(push,1)
 typedef struct SharedData 
 {
     int id;
-    float yaw;
-    float pitch; 
+    float pitch;
+    float yaw; 
     float altitude;
-    std::uint16_t focalLength;
+    float focalLength;
 	long timestamp;
 }SharedData;
+#pragma pack(pop)
 
-union Message {
-    SharedData data;
-    char * msg;
-};
+
 
 typedef SharedData Packet; //change to SharedData when necessary
+
+union Message {
+    Packet data;
+    unsigned char * msg ;
+};
 
 class UDPConn 
 {

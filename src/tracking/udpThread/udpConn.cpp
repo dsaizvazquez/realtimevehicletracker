@@ -31,7 +31,12 @@ void UDPConn::init(UdpConnConfiguration *config){
         std::lock_guard<std::mutex> lck {mtx};
         Message messagePacket;
         memcpy(&messagePacket, message, length * sizeof(char));
-        spdlog::info(messagePacket.data.id);
+        spdlog::info("id: {}, pitch: {},yaw: {}, altitude:{}, focal: {}, timestamp: {}",messagePacket.data.id,
+                                                        messagePacket.data.pitch,
+                                                        messagePacket.data.yaw,
+                                                        messagePacket.data.altitude,
+                                                        messagePacket.data.focalLength,
+                                                        messagePacket.data.timestamp);
         packet = messagePacket.data;
 
         // ACK if necessary

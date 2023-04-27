@@ -22,7 +22,7 @@ int main()
     getline(cin, input);
     while (input != "exit")
     {
-        udpSocket.Send(message.msg,sizeof(SharedData));
+        // udpSocket.Send(message.msg,sizeof(SharedData));
         getline(cin, input);
     }
 
