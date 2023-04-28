@@ -1,7 +1,8 @@
 #include "udpsocket.hpp"
 #include "../../src/tracking/udpThread/udpConn.hpp"
-#include<unistd.h>
-
+#include <unistd.h>
+#include "yaml-cpp/yaml.h"
+#include <spdlog/spdlog.h>
 #include <iostream>
 
 using namespace std;
@@ -17,31 +18,19 @@ int main()
     UDPSocket udpSocket(true); // "true" to use Connection on UDP. Default is "false".
     udpSocket.Connect(IP, PORT);
 
-
-    float ground = 428.7925;
-    float minZoom =6.83;
-
-    Message message1 = {1, -52.9,  15.8, 548.792-ground,   1.337*minZoom, 0}; //38 s
-    Message message2 ={2, -31.6,  -7.8, 548.748-ground,   7.042*minZoom,  0}; //66s
-    Message message3 ={3, -13.5, 108.8, 548.817-ground,   11.565*minZoom, 0}; //11s
-
-
-
-    // You should do an input loop so the program will not terminated immediately:
-    string input;
-    while (input != "exit")
-    {
-        //input.assign(message1.msg,sizeof(SharedData));
-        //udpSocket.Send(input);
-        usleep(38 * microsecond);
-        udpSocket.Send(message2.msg,sizeof(SharedData));
-        usleep(66 * microsecond);
-        //udpSocket.Send(message3.msg,sizeof(SharedData));
-        //usleep(11 * microsecond);
-
-
-    }
-
+    YAML::Node configYAML = YAML::LoadFile("dronePos.yaml");
+    float pitch=configYAML["pitch"].as<float>();
+    float yaw=configYAML["yaw"].as<float>();
+    float altitude=configYAML["altitude"].as<float>();
+    float focalLength=configYAML["focalLength"].as<float>();
+    Message message = {0,pitch,yaw,altitude,focalLength,0};
+    spdlog::info("id: {}, pitch: {},yaw: {}, altitude:{}, focal: {}, timestamp: {}",message.data.id,
+                                                        message.data.pitch,
+                                                        message.data.yaw,
+                                                        message.data.altitude,
+                                                        message.data.focalLength,
+                                                        message.data.timestamp);
+    udpSocket.Send(message.msg,sizeof(SharedData));
     // Close the socket.
     udpSocket.Close();
 

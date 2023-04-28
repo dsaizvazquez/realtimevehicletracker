@@ -184,7 +184,7 @@ void TrackerHandler::updateParams(SharedData data){
 
 	H=data.altitude;
 	float deg2rad_var = 0.017453292;
-	cv::Vec3f theta(0,-data.pitch*deg2rad_var-M_PI/2,data.yaw*deg2rad_var); //TODO make realistic angle changes
+	cv::Vec3f theta(0,data.pitch*deg2rad_var-M_PI/2,data.yaw*deg2rad_var); //TODO make realistic angle changes
 	R=projection::rotationMatrixFromAngles(theta);
 	K.at<float>(0,0)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width;
 	K.at<float>(1,1)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width*projectionConfig->aspectRatio;

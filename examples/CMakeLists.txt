@@ -34,6 +34,6 @@ target_link_libraries(tcpClientTest udpLib)
 
 target_link_libraries(udpConnTestS trackingLib)
 target_link_libraries(udpConnTestC trackingLib)
-target_link_libraries(udpConnSim trackingLib)
+target_link_libraries(udpConnSim trackingLib yaml-cpp)
 
 target_link_libraries(projectionTest projectionLib)
