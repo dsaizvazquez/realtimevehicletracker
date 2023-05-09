@@ -1,3 +1,4 @@
+#pragma once
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
 
@@ -13,6 +14,7 @@ typedef struct ProjectionConfiguration
     float focalLength=0.005;
 }ProjectionConfiguration;
 
+extern cv::Mat R_c;
 
 namespace projection{
     cv::Point3d projectPointToFlatPlane(cv::Mat K, cv::Mat R, float H, cv::Mat homPos);

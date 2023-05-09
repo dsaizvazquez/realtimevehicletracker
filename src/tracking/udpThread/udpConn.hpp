@@ -33,14 +33,14 @@ typedef SharedData Packet; //change to SharedData when necessary
 
 union Message {
     Packet data;
-    unsigned char * msg ;
+    char msg[sizeof(SharedData)] ;
 };
 
 class UDPConn 
 {
 private:
     UDPServer server;
-    Packet packet{0,0,0,6,50,0};
+    Packet packet{0,-45,-90,10,0.5,0};
     std::mutex mtx;
 public:
     Packet getPacket();

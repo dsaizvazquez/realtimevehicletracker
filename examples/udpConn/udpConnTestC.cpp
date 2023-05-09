@@ -15,7 +15,7 @@ int main()
     UDPSocket udpSocket(true); // "true" to use Connection on UDP. Default is "false".
     udpSocket.Connect(IP, PORT);
 
-    Message message = {7,12,12,40.1,30,2921834791827349618};
+    Message message = {7,-52.9, 15.8,40.1,30,2921834791827349618};
 
     // You should do an input loop so the program will not terminated immediately:
     string input;

@@ -63,6 +63,7 @@ int KalmanTracker::correct(cv::Rect stateMat)
 	age=0;
 	cv::Mat s = kf.statePost;
 	cv::Point2d pos(s.at<float>(0, 0),s.at<float>(1, 0));
+	posPxs.push_back(pos);
 	posPx = pos;
 	speedPx = cv::Point2d(s.at<float>(4, 0),s.at<float>(5, 0));
 	box = get_rect_xysr(s.at<float>(0, 0), s.at<float>(1, 0), s.at<float>(2, 0), s.at<float>(3, 0));
@@ -118,7 +119,10 @@ void KalmanTracker::project(cv::Mat K, cv::Mat R, float H,float frame_width, flo
 
 void KalmanTracker::estimateSpeed(float deltaTime){
 	int length = posVector.size();
+	if(length>2){
 	cv::Point3d instantSpeed = (posVector[length-1]-posVector[length-2])/deltaTime;
 	speedVector.push_back(instantSpeed*speedAveragingFactor+speedVector[speedVector.size()-1]*(1-speedAveragingFactor));
+	}
+	
 
 }
