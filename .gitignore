@@ -1,7 +1,9 @@
 *.mp4
 *.avi
 *.jpg
-
+*.txt
+*.csv
 *build*
 .vscode
 *log*
+query.sql

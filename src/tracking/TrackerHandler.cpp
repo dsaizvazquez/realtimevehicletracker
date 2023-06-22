@@ -21,7 +21,7 @@ TrackerHandler::TrackerHandler(double iouT, int age, std::string IPv4, std::uint
 	connection.init(IPv4,port);
 }
 
-TrackerHandler::TrackerHandler(TrackerConfiguration *config,ProjectionConfiguration *projectionConfig, UdpConnConfiguration *udpConfig){
+TrackerHandler::TrackerHandler(TrackerConfiguration *config,ProjectionConfiguration *projectionConfig, UdpConnConfiguration *udpConfig, SqlConn * conn, TargetDatabase target){
 
 	this->config=config;
 
@@ -32,7 +32,8 @@ TrackerHandler::TrackerHandler(TrackerConfiguration *config,ProjectionConfigurat
                 0,                 					projectionConfig->focalLength*projectionConfig->aspectRatio,   projectionConfig->offsetY,
                 0,                  				0,                         -1 );
 	
-	
+	this->conn=conn;
+	baseTarget = target;
 	connection.init(udpConfig);
 	cv::Vec3f angles(M_PI/2,0,-M_PI/2);
 	R_c=projection::rotationMatrixFromAngles(angles); //TODO make realistic angle changes
@@ -44,11 +45,14 @@ void TrackerHandler::init(std::vector<Detection> newDetections){
     detections=newDetections;
     if (trackers.size() == 0){
                 // initialize kalman trackers using first detections.
+				updateParams(connection.getPacket());
                 for (unsigned int i = 0; i < detections.size(); i++)
                 {
 					if(detections[i].box.height==0) continue;
                     KalmanTracker trk;
-                    trk.init(detections[i].box,idCounter, config->speedAvgFactor);
+					
+					int targetId = conn->insertTarget(baseTarget);
+                    trk.init(detections[i].box,idCounter, config->speedAvgFactor,targetId,conn);
 					idCounter++;
                     trackers.push_back(trk);
                 }
@@ -152,7 +156,7 @@ double TrackerHandler::GetIOU(cv::Rect bb_test, cv::Rect bb_gt)
 
 
 
-std::vector<Target>  TrackerHandler::correct(){
+std::vector<TargetDetection>  TrackerHandler::correct(){
 
     int detIdx, trkIdx;
 
@@ -174,7 +178,8 @@ std::vector<Target>  TrackerHandler::correct(){
     for (auto umd : unmatchedDetections)
     {
         KalmanTracker tracker;
-        tracker.init(detections[umd].box,idCounter, config->speedAvgFactor);
+		int targetId = conn->insertTarget(baseTarget);
+        tracker.init(detections[umd].box,idCounter, config->speedAvgFactor,targetId,conn);
 		idCounter++;
 		if(idCounter>100)idCounter=0;
         trackers.push_back(tracker);
@@ -186,12 +191,14 @@ void TrackerHandler::updateParams(SharedData data){
 
 	H=-data.altitude;
 	float deg2rad_var = 0.017453292;
-	cv::Vec3f theta(0,data.pitch*deg2rad_var,data.yaw*deg2rad_var); //TODO make realistic angle changes
+	cv::Vec3f theta(0,data.pitch*deg2rad_var,data.yaw*deg2rad_var);
 	R=projection::rotationMatrixFromAngles(theta);
 	K.at<float>(0,0)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width;
 	K.at<float>(1,1)=data.focalLength*projectionConfig->frame_width/projectionConfig->sensor_width*projectionConfig->aspectRatio;
-	
-
+	baseTarget.carLane = data.id; //TODO clean testing mode as a flag in the code
+	baseTarget.pitch =data.pitch;
+	baseTarget.yaw =data.yaw;
+	baseTarget.height =data.altitude;
 }
 
 void TrackerHandler::setProjectionParams(float width, float height){
@@ -217,7 +224,7 @@ void  TrackerHandler::estimateSpeed(float deltaTime){
 
 };
 
-std::vector<Target> TrackerHandler::getTargets(){
+std::vector<TargetDetection> TrackerHandler::getTargets(){
 
     targets.clear();
 	spdlog::debug("targets cleared");

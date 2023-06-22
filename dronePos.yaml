@@ -4,8 +4,15 @@
 # focalLength: 0.5
 
 
+#pitch: -60
+# yaw: -90
+# roll: 0
+# altitude: 10
+# focalLength: 0.5
+
 pitch: -60
 yaw: -90
 roll: 0
-altitude: 10
+altitude: 120
 focalLength: 0.5
+port:

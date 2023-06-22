@@ -8,6 +8,7 @@ add_subdirectory("detection")
 add_subdirectory("tracking")
 add_subdirectory("udp")
 add_subdirectory("projection")
+add_subdirectory("sql")
 
 
 

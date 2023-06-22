@@ -6,7 +6,7 @@ void UDPConn::init(std::string IPv4, std::uint16_t port){
 
     server.onRawMessageReceived = [&](const char* message, int length, std::string ipv4, std::uint16_t port) {
 
-        std::lock_guard<std::mutex> lck {mtx};
+        std::lock_guard<std::mutex> lock {mtx};
         Message messagePacket;
         memcpy(&messagePacket, message, length * sizeof(char));
         spdlog::info(messagePacket.data.id);
@@ -28,7 +28,7 @@ void UDPConn::init(UdpConnConfiguration *config){
 
     server.onRawMessageReceived = [&](const char* message, int length, std::string ipv4, std::uint16_t port) {
 
-        std::lock_guard<std::mutex> lck {mtx};
+        std::lock_guard<std::mutex> lock {mtx};
         Message messagePacket;
         memcpy(&messagePacket, message, length * sizeof(char));
         spdlog::info("id: {}, pitch: {},yaw: {}, altitude:{}, focal: {}, timestamp: {}",messagePacket.data.id,
@@ -49,10 +49,16 @@ void UDPConn::init(UdpConnConfiguration *config){
         // BINDING FAILED:
         spdlog::error("Error code: {}, {}",errorCode,errorMessage);
     });
+
+    packet.altitude=config->altitude;
+    packet.pitch=config->pitch;
+    packet.yaw=config->yaw;
+    packet.focalLength=config->focalLength;
+
 }
 
 Packet UDPConn::getPacket(){
-    std::lock_guard<std::mutex> lck {mtx};
+    std::lock_guard<std::mutex> lock {mtx};
     return packet;
 
 }
