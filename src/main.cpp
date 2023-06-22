@@ -41,6 +41,19 @@ typedef struct Configuration
     char outputType ='s';
     int fps =15;
 
+    TargetDatabase defaultTarget {
+        5.0,
+        0.0,
+        0.0,
+        0.0,
+        TOP, 
+        {}};
+
+    std::string sqlHostName = "tcp://127.0.0.1:3306";
+    std::string sqlUserName = "root";
+    std::string sqlPassword = "XXXXXXXX";
+    std::string sqlSchema = "RTVT";
+
 }Configuration;
 
 
@@ -153,12 +166,15 @@ void setConfig(Configuration *config, YAML::Node configYAML){
 
     if(configYAML["focalLength"]){
         config->projection.focalLength=configYAML["focalLength"].as<float>();
+        config->udpConn.focalLength=configYAML["focalLength"].as<float>();
+
         
     }
     spdlog::info("focalLength: {}", config->projection.focalLength);
 
     if(configYAML["aspectRatio"]){
         config->projection.aspectRatio=configYAML["aspectRatio"].as<float>();
+
         
     }
     spdlog::info("aspectRatio: {}", config->projection.aspectRatio);
@@ -221,6 +237,66 @@ void setConfig(Configuration *config, YAML::Node configYAML){
     spdlog::info("yolov: {}", config->detection.yolov);
 
 
+    spdlog::info("SQL Configuration**********************************");
+
+
+     if(configYAML["sqlHostName"]){
+        config->sqlHostName=configYAML["sqlHostName"].as<std::string>();  
+    }
+    spdlog::info("sqlHostName: {}", config->sqlHostName);
+
+    if(configYAML["sqlUserName"]){
+        config->sqlUserName=configYAML["sqlUserName"].as<std::string>();  
+    }
+    spdlog::info("sqlUserName: {}", config->sqlUserName);
+
+    if(configYAML["sqlPassword"]){
+        config->sqlPassword=configYAML["sqlPassword"].as<std::string>();  
+    }
+    spdlog::info("sqlPassword: {}", config->sqlPassword);
+
+    if(configYAML["sqlSchema"]){
+        config->sqlSchema=configYAML["sqlSchema"].as<std::string>();  
+    }
+    spdlog::info("sqlSchema: {}", config->sqlSchema);
+
+    
+    spdlog::info("TESTING Configuration**********************************");
+
+    if(configYAML["height"]){
+        config->defaultTarget.height=configYAML["height"].as<float>();
+        config->udpConn.altitude=configYAML["height"].as<float>();
+        
+    }
+    spdlog::info("height: {}", config->defaultTarget.height);
+
+    if(configYAML["roll"]){
+        config->defaultTarget.roll=configYAML["roll"].as<float>();
+        
+    }
+    spdlog::info("roll: {}", config->defaultTarget.roll);
+
+    if(configYAML["pitch"]){
+        config->defaultTarget.pitch=configYAML["pitch"].as<float>();
+        config->udpConn.pitch=configYAML["pitch"].as<float>();
+
+    }
+    spdlog::info("pitch: {}", config->defaultTarget.pitch);
+
+    if(configYAML["yaw"]){
+        config->defaultTarget.yaw=configYAML["yaw"].as<float>();
+        config->udpConn.yaw=configYAML["yaw"].as<float>();
+
+    }
+    spdlog::info("yaw: {}", config->defaultTarget.yaw);
+
+    if(configYAML["carLane"]){
+        config->defaultTarget.carLane=configYAML["carLane"].as<int>();
+        
+    }
+    spdlog::info("carLane: {}", config->defaultTarget.carLane);
+
+
 
 
 
@@ -231,7 +307,7 @@ void setConfig(Configuration *config, YAML::Node configYAML){
 const int colorNum = 20;
 cv::Scalar randColor[colorNum];
 
-std::string createJSON(int status, std::string input, std::vector<Target> targets,std::vector<std::string> class_list,Json::StreamWriterBuilder wbuilder){
+std::string createJSON(int status, std::string input, std::vector<TargetDetection> targets,std::vector<std::string> class_list,Json::StreamWriterBuilder wbuilder){
     Json::Value root; 
     int color[3];
 
@@ -239,7 +315,7 @@ std::string createJSON(int status, std::string input, std::vector<Target> target
     root["input"] = input;
 
     Json::Value array;
-    for(Target target : targets)
+    for(TargetDetection target : targets)
     {
         Json::Value targetVal;
         targetVal["confidence"] = target.confidence ;
@@ -363,10 +439,15 @@ int main(int argc, char * argv[]){
     // Create detector
     Detector detector(net,class_list,&config.detection);
 
+    spdlog::info("Connecting to the sql server");
+    //create sqlconn
+    SqlConn conn(config.sqlHostName, config.sqlUserName, config.sqlPassword,config.sqlSchema);
+    spdlog::info("sql connection stablished");
+
 
     //Create tracker
-    TrackerHandler tracker(&config.tracker,&config.projection, &config.udpConn);
-    std::vector<Target> targets;
+    TrackerHandler tracker(&config.tracker,&config.projection, &config.udpConn, &conn,config.defaultTarget);
+    std::vector<TargetDetection> targets;
 
     
     spdlog::info("Tracker and Detector initialized");
@@ -452,7 +533,7 @@ int main(int argc, char * argv[]){
                     label = class_list[targets[i].class_id] + ":" + label;
                     // Draw class labels.
                     draw::draw_label(frame, label, left, top,color);
-                    draw::draw_label(frame, labelBottom, left, top+height,color);
+                    //draw::draw_label(frame, labelBottom, left, top+height,color);
                     //spdlog::info("pos: {} {} {}",targets[i].speed, targets[i].box.x,targets[i].box.y );
                 }
                 

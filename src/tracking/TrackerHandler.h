@@ -2,6 +2,7 @@
 #include "../detection/Detector.h"
 #include "hungarian/Hungarian.h"
 #include "udpThread/udpConn.hpp"
+#include "../sql/SqlConn.h"
 
 typedef struct TrackerConfiguration
 {
@@ -28,7 +29,7 @@ class TrackerHandler{
 	std::vector<cv::Point> matchedPairs;
 
 
-    std::vector<Target> targets;
+    std::vector<TargetDetection> targets;
     std::vector<Detection> detections;
 
     TrackerConfiguration *config;
@@ -36,6 +37,9 @@ class TrackerHandler{
     ProjectionConfiguration *projectionConfig;
 
     UDPConn connection;
+
+    SqlConn *conn;
+    TargetDatabase baseTarget;
 
     cv::Mat K;
     cv::Mat R;
@@ -47,13 +51,13 @@ class TrackerHandler{
 
     public:
         TrackerHandler(double iouT, int age,std::string IPv4, std::uint16_t port,float focalLengthp, float aspectRatio, float offsetX, float offsetY, float sensor_width, float speedAvgFactor);
-        TrackerHandler(TrackerConfiguration *config, ProjectionConfiguration *projectionConfig, UdpConnConfiguration *udpConfig);
+        TrackerHandler(TrackerConfiguration *config, ProjectionConfiguration *projectionConfig, UdpConnConfiguration *udpConfig, SqlConn * conn, TargetDatabase target);
 
         void init(std::vector<Detection> detections);
         
         void predict();
         void match();
-        std::vector<Target> correct(); //DELETE RETURN
+        std::vector<TargetDetection> correct(); //DELETE RETURN
 
         void updateParams(SharedData data); 
 
@@ -63,6 +67,6 @@ class TrackerHandler{
         void estimateSpeed(float deltaTime); 
 
         
-        std::vector<Target> getTargets(); 
+        std::vector<TargetDetection> getTargets(); 
 
 };

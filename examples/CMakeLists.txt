@@ -10,9 +10,13 @@ add_executable (tcpClientTest "udpBasic/tcpClientTest.cpp")
 
 add_executable (udpConnTestS "udpConn/udpConnTestS.cpp")
 add_executable (udpConnTestC "udpConn/udpConnTestC.cpp")
+
 add_executable (udpConnSim "udpConn/udpConnSimulator.cpp")
+add_executable (testCampaign "udpConn/testCampaign.cpp")
 
 add_executable (projectionTest "projection/projectionTest.cpp")
+
+add_executable (sqlTest "sql/sqlTest.cpp")
 
 
 target_link_libraries(detection_yolov5_image ${OpenCV_LIBS})
@@ -34,6 +38,10 @@ target_link_libraries(tcpClientTest udpLib)
 
 target_link_libraries(udpConnTestS trackingLib)
 target_link_libraries(udpConnTestC trackingLib)
+
 target_link_libraries(udpConnSim trackingLib yaml-cpp)
+target_link_libraries(testCampaign trackingLib yaml-cpp)
 
 target_link_libraries(projectionTest projectionLib yaml-cpp)
+
+target_link_libraries(sqlTest sqlLib)

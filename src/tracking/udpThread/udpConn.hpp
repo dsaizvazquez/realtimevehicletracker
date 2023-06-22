@@ -10,6 +10,10 @@ typedef struct UdpConnConfiguration
 {
 	std::string IPv4 = "127.0.0.1";
     std::uint16_t port = 8888;
+    float pitch;
+    float yaw; 
+    float altitude;
+    float focalLength;
     
 }UdpConnConfiguration;
 

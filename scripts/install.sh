@@ -7,8 +7,9 @@ cd ../..
 sudo apt install -y gstreamer1.0-rtsp gstreamer1.0-plugins-ugly gdb
 
 
-
 rm -rf spdlog
+
+sudo apt install  -y libmysqlcppconn-dev
 
 mkdir build
 cd build

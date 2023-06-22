@@ -3,13 +3,16 @@
 
 
 
-int KalmanTracker::init(cv::Rect initalState,int idNum, float speedAvgFactor)
+int KalmanTracker::init(cv::Rect initalState,int idNum, float speedAvgFactor, int trackerId,SqlConn *con)
 {
 	int stateNum = 8;
 	int measureNum = 4;
 	id=idNum;
 	kf = cv::KalmanFilter(stateNum, measureNum, 0);
 	speedAveragingFactor= speedAvgFactor;
+
+	targetDatabaseId=trackerId;
+	conn=con;
 
 	kf.transitionMatrix = (cv::Mat_<float>(stateNum, stateNum) <<
 		1, 0, 0, 0, 1, 0, 0, 0,
@@ -101,7 +104,7 @@ cv::Rect KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)
 	return cv::Rect(x, y, w, h);
 }
 
-Target KalmanTracker::getTarget(){
+TargetDetection KalmanTracker::getTarget(){
 	res.box = box;
 	cv::Point3d instantSpeed =speedVector[speedVector.size()-1];
 	res.speed = sqrt(instantSpeed.x*instantSpeed.x+instantSpeed.y*instantSpeed.y);
@@ -113,6 +116,9 @@ Target KalmanTracker::getTarget(){
 
 void KalmanTracker::project(cv::Mat K, cv::Mat R, float H,float frame_width, float frame_height){
 		cv::Mat position = (cv::Mat_<float>(3,1) << posPx.x-frame_width/2, posPx.y-frame_height/2, 1);
+		cv::patchNaNs(position, 0);
+		cv::Mat mask = position==std::numeric_limits<float>::infinity();
+		position.setTo(1000000,mask);
 		posVector.push_back(projection::projectPointToFlatPlane(K,R,H,position));
 } 
 
@@ -122,7 +128,19 @@ void KalmanTracker::estimateSpeed(float deltaTime){
 	if(length>2){
 	cv::Point3d instantSpeed = (posVector[length-1]-posVector[length-2])/deltaTime;
 	speedVector.push_back(instantSpeed*speedAveragingFactor+speedVector[speedVector.size()-1]*(1-speedAveragingFactor));
+	savePosition();
 	}
-	
-
 }
+
+ void KalmanTracker::savePosition(){
+	PositionDatabase pos{	positionCounter,
+							posPx.x,
+							posPx.y,
+							posVector[posVector.size()-1].x,
+							posVector[posVector.size()-1].y,
+							speedVector[speedVector.size()-1].x,
+							speedVector[speedVector.size()-1].y,
+							class_id};
+	positionCounter++;
+	conn->insertPosition(targetDatabaseId,pos);
+ }

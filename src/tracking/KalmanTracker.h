@@ -5,21 +5,21 @@
 #include <spdlog/spdlog.h>
 
 #include "../projection/projection.h"
+#include "../sql/SqlConn.h"
 
 
-typedef struct Target
+typedef struct TargetDetection
 {
 	float confidence;
     float speed; 
 	cv::Rect box;
     int class_id;
     int id;
-}Target;
+}TargetDetection;
 
 
 
 
-//TODO: Unfinished, basic structure in process
 class KalmanTracker{
     
     cv::KalmanFilter kf;
@@ -33,13 +33,20 @@ class KalmanTracker{
     std::vector<cv::Point3d> speedVector;
     float speedAveragingFactor =0.7;
 
-    Target res;
+    TargetDetection res;
+
+    SqlConn *conn;
+    int targetDatabaseId;
+    int positionCounter=0;
+
+
 
     cv::Rect get_rect_xysr(float cx, float cy, float s, float r);
 
 
     public:
-        int init(cv::Rect initialState,int id, float speedAveragingFactorp);
+        int init(cv::Rect initialState,int id, float speedAveragingFactorp,int targetDatabaseId,SqlConn *con);
+
         cv::Rect predict();
         int correct(cv::Rect state);
 
@@ -51,7 +58,9 @@ class KalmanTracker{
         void project(cv::Mat K, cv::Mat R, float H,float frame_width, float frame_height); 
         void estimateSpeed(float deltaTime);
 
-        Target getTarget();
+        TargetDetection getTarget();
+        void savePosition(); //TODO
+
 
         int age = 0;
         int id = 0;
