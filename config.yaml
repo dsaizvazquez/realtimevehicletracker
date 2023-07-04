@@ -1,0 +1,107 @@
+#UDP config
+port: 8998
+IP: 0.0.0.0
+
+#TCP config
+tcpPort: 12520
+updateRate: 5 # one every 15 frames
+
+#Input config
+input: rtsp://localhost:8554/in
+skippedFrames: 1
+errorDelay: 1 #s
+
+# Output config
+outputType: 's' #types are s: stream v: video
+fps: 15
+output: "appsrc ! videoconvert ! x264enc speed-preset=ultrafast bitrate=1800  key-int-max=40 ! rtspclientsink location=rtspt://localhost:8554/out"
+# output: "outcpp.avi"
+
+
+# NN config
+cocoFile: "models/coco.names"
+
+# # ---------------YOLOV7 TINY----------------------------------
+# YOLOv: 7
+# nnetFile: "models/yolov7-tiny.onnx"
+# InputHeight: 640
+# INPUT_WIDTH: 640
+
+# ---------------YOLOV7----------------------------------
+YOLOv: 7
+nnetFile: "models/yolov7.onnx"
+InputHeight: 640
+InputWidth: 640
+
+# # ---------------YOLOV7 E6----------------------------------
+# YOLOv: 7
+# nnetFile: "models/yolov7-e6.onnx"
+# InputHeight: 1280
+# InputWidth: 1280
+
+# # ---------------YOLOV5s----------------------------------
+# YOLOv:5
+# nnetFile: "models/yolov5s.onnx"
+# InputHeight: 640
+# InputWidth: 640
+
+# # ---------------YOLOV5m----------------------------------
+# YOLOv: 5
+# nnetFile: "models/yolov5m.onnx"
+# InputHeight: 640
+# InputWidth: 640
+
+# # ---------------YOLOV5l----------------------------------
+# YOLOv:5
+# nnetFile: "models/yolov5l.onnx"
+# InputHeight: 640
+# InputWidth: 640
+
+# # ---------------YOLOV5s6----------------------------------
+# YOLOv: 5
+# nnetFile: "models/yolov5s6.onnx"
+# InputHeight: 1280
+# InputWidth: 1280
+
+
+# Tracking config
+processNoiseCov: 0.01
+measurementNoiseCov: 0.1
+errorCovPost: 1
+
+iouThreshold: 0.3
+maxAge: 2
+
+## Test Campaign PARAMETERS --------------------------------------------------
+
+#initial projection Parameters SIMULATOR
+focalLength: 0.5
+aspectRatio: 0.75
+offsetX: 0
+offsetY: 0
+sensorWidth: 1
+
+height: 5
+roll: 0
+pitch: -45
+yaw: -90
+carLane: 0 #TOP 0, CENTER 1, BOTTOM 2
+
+#Speed averaging setup
+speedAverageFactor: 0.8
+
+
+# Detection Config
+ScoreThreshold: 0.3
+NmsThreshold: 0.3
+ConfidenceThreshold: 0.3
+
+
+
+#SQL config
+
+sqlHostName: "tcp://127.0.0.1:3306"
+sqlUserName: "root"
+sqlPassword: "XXXXXXX"
+sqlSchema:   "YYYYYY"
+
