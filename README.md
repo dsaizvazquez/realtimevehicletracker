@@ -2,7 +2,7 @@
 
 Repository containing the c++ code of the real time vehicle tracker. It is based on the SORT algorithm and uses YOLOv7 as its neural network. Testing has been done on an ec2 p2.xlarge instance, an ec2 p3.xlarge instance, and a personal desktop PC with a NVIDIA 1060. All had Ubuntu 22.04LTS as their OS.
 
-For installation, first compile the last version of OpenCV available with CUDA and CUdnn dependencies and then run the script/install.sh bash file. Installation tutorial can be found below in the ReadME. The tutorial is based on personal experience.
+For installation, first compile the last version of OpenCV available with CUDA and CUdnn dependencies and then run the script/install.sh bash file. An installation tutorial for openCV can be found below in the ReadME. The tutorial is based on personal experience.
 
 ## Bibliography
 
