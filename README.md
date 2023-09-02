@@ -4,17 +4,7 @@ Repository containing the c++ code of the real time vehicle tracker. It is based
 
 For installation, first compile the last version of OpenCV available with CUDA and CUdnn dependencies and then run the script/install.sh bash file. An installation tutorial for openCV can be found below in the ReadME. The tutorial is based on personal experience.
 
-## Bibliography
 
-- https://github.com/mcximing/hungarian-algorithm-cpp/
-- https://github.com/mcximing/sort-cpp
-- https://www.kalmanfilter.net/default.aspx
-- https://docs.opencv.org/3.4/dd/d6a/classcv_1_1KalmanFilter.html
-- https://github.com/eminfedar/async-sockets-cpp
-- https://github.com/JustasBart/yolov8_CPP_Inference_OpenCV_ONNX
-- https://github.com/WongKinYiu/yolov7
-- https://github.com/UNeedCryDear/yolov7-opencv-dnn-cpp
-- https://img.ly/blog/ultimate-guide-to-ffmpeg/
 
 # Installing OpenCV on ec2 instance
 
